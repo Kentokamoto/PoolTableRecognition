@@ -8,7 +8,7 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
-
+#include "find_pool_table.h"
 using namespace std;
 
 int main(int argv, char* argc[]){
@@ -27,13 +27,11 @@ int main(int argv, char* argc[]){
 		cap >> imageInput;
 		if (imageInput.empty()) break;
 
-		cv::Mat imageInputGray;
-		cv::cvtColor(imageInput, imageInputGray, cv::COLOR_BGR2GRAY);cv::namedWindow("My Image", cv::WINDOW_AUTOSIZE );
 		cv::Mat outputImage;
-		cv::resize(imageInput, outputImage, cv::Size(imageInputGray.cols/2, imageInputGray.rows/2));	
+		cv::resize(imageInput, outputImage, cv::Size(imageInput.cols/2, imageInput.rows/2));	
+		findTable(outputImage);
 		cv::namedWindow("My Image", cv::WINDOW_NORMAL);
 		cv::imshow("Marker", outputImage);
-
 		if (cv::waitKey(1) == 27)  break;  // hit ESC (ascii code 27) to quit
 
 	}
