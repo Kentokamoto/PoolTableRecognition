@@ -2,7 +2,7 @@
 #----------------------
 NAME = PoolTable
 CC = g++
-COMMONFLAGS = -Wall -std=c++11
+COMMONFLAGS = -std=c++11 -Wall -w #-w ignores the warnings
 OBJS = *.cpp
 HDRS = *.h
 LDFLAGS =  -L/usr/local/opt/opencv3/lib
@@ -20,8 +20,7 @@ OBJS = $(SRCS:src/%.cpp=bin/%.o)
 #file1 = main.cpp
 all: $(NAME)
 $(NAME): $(OBJS)
-	$(CXX) $^ -o $(NAME) $(LDFLAGS) $(LDLIBS) $(CPPFLAGS)
-
+	$(CXX) $^ $(LDFLAGS) $(LDLIBS) $(CPPFLAGS) -o $(NAME) 
 #ensures the bin directory is created
 $(SRCS): | bin
 
@@ -30,11 +29,11 @@ bin:
 	        mkdir -p $(shell find src -type d | sed "s/src/bin/")
 
 bin/%.o: src/%.cpp
-	        $(CXX) $(COMMONFLAGS) $< -c -o $@
+	        $(CXX) $(CPPFLAGS) $(LDFLAGS) $(LDLIBS) $< -c -o $@ 
 
 #file1_exe: $(OBJS) $(HDRS)
 #	$(CC) $(OBJS) $(CFLAGS) -o cv $(LDFLAGS) $(CPPFLAGS) $(LDLIBS)
 #file2_exe: $(OBJS) $(HDRS)
 #	$(CC) $(PKG) $(OBJS) $(CPPFlags) -o cv $(LDFLAGS)
 clean:
-		rm *.out *~ *.txt
+		rm -rf $(NAME)* bin/
