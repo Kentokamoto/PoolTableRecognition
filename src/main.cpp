@@ -30,9 +30,10 @@ int main(int argv, char* argc[]){
 
 		cv::Mat imageInputGray;
 		cv::cvtColor(imageInput, imageInputGray, cv::COLOR_BGR2GRAY);cv::namedWindow("My Image", cv::WINDOW_AUTOSIZE );
-		cv::resize(imageInputGray, imageInputGray, cv::Size(imageInputGray.cols/4, imageInputGray.rows/4));	
+		cv::Mat outputImage;
+		cv::resize(imageInput, outputImage, cv::Size(imageInputGray.cols/2, imageInputGray.rows/2));	
 		cv::namedWindow("My Image", cv::WINDOW_NORMAL);
-		cv::imshow("Marker", imageInputGray);
+		cv::imshow("Marker", outputImage);
 
 		if (cv::waitKey(1) == 27)  break;  // hit ESC (ascii code 27) to quit
 
