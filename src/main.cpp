@@ -9,7 +9,6 @@
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 
-
 using namespace std;
 
 int main(int argv, char* argc[]){
