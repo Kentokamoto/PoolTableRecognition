@@ -14,7 +14,7 @@ using namespace std;
 int main(int argv, char* argc[]){
 
 	printf("Hit ESC key to quit\n");
-	cv::VideoCapture cap("./src/Photos/IMG_1284.MOV");
+	cv::VideoCapture cap("./src/Photos/IMG_1285.MOV");
 	//cv::VideoCapture cap(0);
 	if (!cap.isOpened()) {          // check if we succeeded
 		printf("error - can't open the video file; hit enter key to quit\n");
