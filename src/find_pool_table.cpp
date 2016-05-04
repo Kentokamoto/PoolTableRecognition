@@ -28,7 +28,7 @@ cv::Point2f computeIntersect(cv::Vec4i a, cv::Vec4i b)
 		return cv::Point2f(-1, -1);  
 }  
 
-void findTable(Mat src){
+vector<Point> findTable(Mat src){
 	Mat src_gray, detected_edges, cdst, color_dst;	
 	char* window_name = "Edge Map";
 	double lowThreshold = 50;
@@ -88,14 +88,23 @@ void findTable(Mat src){
  	circle(cdst, cornerAVG.at(i),4,Scalar(255,255,0),1,8,0);
  }
  imshow("detected lines",cdst);
+ return cornerAVG;
 
 }
+
+
+
+
 double ptDistance(Point& a, Point& b){
 	double x = (a.x - b.x)*(a.x - b.x);
 	double y = (a.y - b.y)*(a.y - b.y);
 	return sqrt(x+y);
 
 }
+
+
+
+
 bool myfunction2 (vector<Point> a, vector<Point> b) { return (a.size()>b.size()); }
 bool myfunction3 (Point a, Point b) { return (a.x < b.x); }
 bool myfunction4 (Point a, Point b) { return (a.y < b.y); }

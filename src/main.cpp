@@ -9,6 +9,8 @@
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 #include "find_pool_table.h"
+#include "warp.h"
+ 
 using namespace std;
 
 int main(int argv, char* argc[]){
@@ -29,8 +31,13 @@ int main(int argv, char* argc[]){
 
 		cv::Mat outputImage;
 		cv::resize(imageInput, outputImage, cv::Size(imageInput.cols/2, imageInput.rows/2));	
-		findTable(outputImage);
-		cv::namedWindow("My Image", cv::WINDOW_NORMAL);
+		vector<cv::Point> corners = findTable(outputImage);
+		if(corners.size() == 4){
+			warpImage(corners, outputImage);
+		}
+		
+
+		//cv::namedWindow("My Image", cv::WINDOW_NORMAL);
 		cv::imshow("Marker", outputImage);
 		if (cv::waitKey(1) == 27)  break;  // hit ESC (ascii code 27) to quit
 
