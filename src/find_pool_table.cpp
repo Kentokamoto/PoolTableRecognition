@@ -80,97 +80,61 @@ void findTable(Mat src){
  	line( cdst, pt1, pt2, Scalar(0,255,255), 1, CV_AA);
  }
  vector<Vec2f> line1, line2;
-//findOrthogonal(lines,line1,line2);
 
-//cout << line1.size() << " " << line2.size() << endl;;
  vector<Point> corners = findIntersection(lines);
  vector<Point> cornerAVG = averagePoints(corners);
- for(size_t i = 0; i < corners.size(); i++){
+ for(size_t i = 0; i < cornerAVG.size(); i++){
 	//cout << corners.at(i).x << " " << corners.at(i).y << endl;
- 	circle(cdst, corners.at(i),4,Scalar(255,255,0),1,8,0);
+ 	circle(cdst, cornerAVG.at(i),4,Scalar(255,255,0),1,8,0);
  }
  imshow("detected lines",cdst);
 
 }
+double ptDistance(Point& a, Point& b){
+	double x = (a.x - b.x)*(a.x - b.x);
+	double y = (a.y - b.y)*(a.y - b.y);
+	return sqrt(x+y);
 
-
-bool myfunction (vector<Vec2f> a, vector<Vec2f> b) { return (a.size()>b.size()); }
-
-//void findOrthogonal(vector<Vec2f> inputLine, vector<Vec2f>& line1, vector<Vec2f>& line2){
-//	vector< vector<Vec2f> > bins;
-//
-//	// To set values
-//	for(int i = 0; i < 18; i++)
-//	{
-//		vector<Vec2f> temp; // create an array, don't work directly on buff yet.
-//		bins.push_back(temp); // Store the array in the buffer
-//	}
-//
-//	for(size_t i = 0; i < inputLine.size(); i++){
-//		bins[(int)floor((inputLine[i][1]*18/CV_PI))].push_back(inputLine[i]);
-// 	}
-// 	vector<int> index(bins.size());
-// 	for (size_t i = 0; i != index.size(); ++i) index[i] = i;
-
-// 	sort(index.begin(),index.end(), [&bins](size_t a, size_t b){return bins[a].size() > bins[b].size(); });
-// 	int index2 = 0;
-// 	for(int i = 1; i < index.size(); i++){
-// 		if(abs(index[0] - index[i]) <= 2){ 
-// 			continue;
-// 		}else{ 
-// 			index2 = index[i];
-// 			break;
-// 		} 
-// 	}
-
-// 	for(size_t i = 0; i < inputLine.size(); i++){
-// 		double D = 25;
-// 		if(abs( inputLine[i][1]*180/CV_PI - (index[0]-90)*180  ) < D ||
-// 				(abs(inputLine[i][1]*180/CV_PI-180-(index[0]-90)*180) < D ||
-// 				 abs(inputLine[i][1]*180/CV_PI-180+(index[0]-90)*180) < D)){
-// 			line1.push_back(inputLine[i]);
-// 		}else if(abs( inputLine[i][1]*180/CV_PI - (index[index2]-90)*180  ) < D || 
-// 				(abs(inputLine[i][1]*180/CV_PI-180-(index[index2]-90)*180) < D ||
-// 				 abs(inputLine[i][1]*180/CV_PI-180+(index[index2]-90)*180) < D)){
-// 			line2.push_back(inputLine[i]);
-// 		}
-// 	}
-
-
-// }
-
+}
 bool myfunction2 (vector<Point> a, vector<Point> b) { return (a.size()>b.size()); }
+bool myfunction3 (Point a, Point b) { return (a.x < b.x); }
+bool myfunction4 (Point a, Point b) { return (a.y < b.y); }
 
-vector<Point> averagePoints(vector<Point>& corner){
-
+vector<Point> averagePoints(vector<Point> corner){
+	sort(corner.begin(),corner.end(), myfunction3);
+	sort(corner.begin(),corner.end(), myfunction4);
+	vector<Point> retVec;
 	vector< vector<Point> > bins;
-	for(size_t i = 0; i < corner.size(); i++){
-		double x = corner[i].x;
-		double y = corner[i].y;
-		vector<Point> temp;
-		temp.push_back(corner[i]);
-		for(size_t j = i+1; j < corner.size(); j++){
-			if(abs(x - corner[j].x) < 20 && abs(y - corner[j].y) < 20){
-				temp.push_back(corner[j]);
+	for (int i = 0; i < 4; ++i){
+		if(corner.empty()) return retVec;
+		Point temp = corner[0];
+		vector<Point> cornerList;
+		cornerList.push_back(temp);
+		for(unsigned int j = (corner.size()-1); j > 0; j-- ){
+			if(ptDistance(corner[j],temp) < 50){
+				cornerList.push_back(corner[j]);
+				corner.erase(corner.begin() + j);
 			}
 
 		}
-		bins.push_back(temp);
-		temp.clear();
-	}
+		corner.erase(corner.begin());
+		bins.push_back(cornerList);
+		cornerList.clear();
 
-	vector<Point> retVec;
+	}	
 	if(bins.size() >= 4){
-		sort(bins.begin(),bins.end(), myfunction2);
-		for(size_t i = 0; i < 4; i++){
-			double xSum = 0;
-			double ySum = 0;
-			for(size_t j = 0; j < bins[i].size(); j++){
-			//cout << bins[i][j].x << " " << bins[i][j].y << endl;
-				xSum += bins[i][j].x;
-				ySum += bins[i][j].y;
+		for(int i = 0; i < 4; i++){
+			if(bins[i].empty()) return retVec;
+
+			double xtotal = 0;
+			double ytotal = 0;
+			for(int j = 0; j < bins[i].size(); j++){
+				xtotal += bins[i][j].x;
+				ytotal += bins[i][j].y;
 			}
-			Point temp(xSum/bins.size(), ySum/bins.size());
+			Point temp;
+			temp.x = xtotal/bins[i].size();
+			temp.y = ytotal/bins[i].size();
 			retVec.push_back(temp);
 		}
 	}else{
@@ -203,7 +167,7 @@ vector<Point> findIntersection(vector<Vec2f>& lines){
 			if(xCross > 0 && yCross > 0){
 				temp.x = xCross;
 				temp.y = yCross;
-				cout << xCross << " " << yCross << endl;
+				//cout << xCross << " " << yCross << endl;
 				corners.push_back(temp);
 			}
 		}	
