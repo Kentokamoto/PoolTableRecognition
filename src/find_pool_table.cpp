@@ -53,7 +53,7 @@ vector<Point> findTable(Mat src){
 			CV_THRESH_BINARY | CV_THRESH_OTSU);
 	//Set the Threshold Values
 	lowThreshold = otsu_thresh_val;
-	highThreshold = otsu_thresh_val * 1.35;
+	highThreshold = otsu_thresh_val * 1.4;
 
 	/// Canny detector
 	Canny( detected_edges, detected_edges, lowThreshold, highThreshold, kernel_size );
@@ -66,7 +66,7 @@ vector<Point> findTable(Mat src){
 	cvtColor(detected_edges, cdst, CV_GRAY2BGR);
 
 	vector<Vec2f> lines;
-	HoughLines(detected_edges, lines, 1, CV_PI/180, 120,0,0 );
+	HoughLines(detected_edges, lines, 1, CV_PI/180, 200,0,0 );
 
 	for( size_t i = 0; i < lines.size(); i++ )
 	{
@@ -74,10 +74,10 @@ vector<Point> findTable(Mat src){
 		Point pt1, pt2;
 		double a = cos(theta), b = sin(theta);
 		double x0 = a*rho, y0 = b*rho;
-		pt1.x = cvRound(x0 + 1000*(-b));
-		pt1.y = cvRound(y0 + 1000*(a));
-		pt2.x = cvRound(x0 - 1000*(-b));
-		pt2.y = cvRound(y0 - 1000*(a));
+		pt1.x = cvRound(x0 + 10000*(-b));
+		pt1.y = cvRound(y0 + 10000*(a));
+		pt2.x = cvRound(x0 - 10000*(-b));
+		pt2.y = cvRound(y0 - 10000*(a));
 		line( cdst, pt1, pt2, Scalar(0,255,255), 1, CV_AA);
 	}
 
@@ -85,25 +85,16 @@ vector<Point> findTable(Mat src){
 
 	vector<Point> corners = findIntersection(cdst,lines);
 	vector<Point> cornerAVG = averagePoints(corners);
-	for(size_t i = 0; i < cornerAVG.size(); i++){
+	for(size_t i = 0; i < corners.size(); i++){
 		//cout << corners.at(i).x << " " << corners.at(i).y << endl;
-		circle(cdst, cornerAVG.at(i),4,Scalar(255,255,0),1,8,0);
+		circle(cdst, corners.at(i),4,Scalar(255,255,0),1,8,0);
 
 	}
 	// Draw Detected Square
-	if(cornerAVG.size() == 4){
-		line(cdst,cornerAVG.at(0), cornerAVG.at(1), Scalar(255,0,0),3, 8, 0);
-		line(cdst,cornerAVG.at(1), cornerAVG.at(3), Scalar(255,0,0),3, 8, 0);
-		line(cdst,cornerAVG.at(3), cornerAVG.at(2), Scalar(255,0,0),3, 8, 0);
-		line(cdst,cornerAVG.at(2), cornerAVG.at(0), Scalar(255,0,0),3, 8, 0);
-	}
 	imshow("Detected Lines",cdst);
 	return cornerAVG;
 
 }
-
-
-
 
 double ptDistance(Point& a, Point& b){
 	double x = (a.x - b.x)*(a.x - b.x);
@@ -112,25 +103,36 @@ double ptDistance(Point& a, Point& b){
 
 }
 
-
-
-
 bool myfunction2 (vector<Point> a, vector<Point> b) { return (a.size()>b.size()); }
 bool myfunction3 (Point a, Point b) { return (a.x < b.x); }
-bool myfunction4 (Point a, Point b) { return (a.y < b.y); }
+bool myfunction4 (Point a, Point b) { return (a.y < b.y); 
+}
 
 vector<Point> averagePoints(vector<Point> corner){
 	sort(corner.begin(),corner.end(), myfunction3);
 	sort(corner.begin(),corner.end(), myfunction4);
 	vector<Point> retVec;
 	vector< vector<Point> > bins;
+
+	/*
+	Try this algorithm instead:
+	add first element to bins
+	For all elements in corner vector,
+	for all elements in bins
+	if the corner element is near bins, add it
+	else add to a new vector
+	repeat till the entire corner vector is empty.
+	
+	*/
+	vector<Point> cornerList;
+
 	for (int i = 0; i < 4; ++i){
 		if(corner.empty()) return retVec;
-		Point temp = corner[0];
+		Point temp = corner[0]; //Refine algorithm
 		vector<Point> cornerList;
 		cornerList.push_back(temp);
 		for(unsigned int j = (corner.size()-1); j > 0; j-- ){
-			if(ptDistance(corner[j],temp) < 40){
+			if(ptDistance(corner[j],temp) < 60){
 				cornerList.push_back(corner[j]);
 				corner.erase(corner.begin() + j);
 			}
@@ -141,6 +143,7 @@ vector<Point> averagePoints(vector<Point> corner){
 		cornerList.clear();
 
 	}	
+	//sort(bins.begin(),bins.end(), myfunction2);
 	if(bins.size() >= 4){
 		for(int i = 0; i < 4; i++){
 			if(bins[i].empty()) return retVec;
@@ -159,14 +162,15 @@ vector<Point> averagePoints(vector<Point> corner){
 	}else{
 		return retVec;
 	}
-	sort(retVec.begin(),retVec.end(), myfunction3);
+
+	//sort(retVec.begin(),retVec.end(), myfunction3);
+	
 	sort(retVec.begin(),retVec.end(), myfunction4);
+
 
 	return retVec;
 
 }
-
-
 
 
 vector<Point> findIntersection(Mat& src, vector<Vec2f>& lines){
@@ -181,6 +185,8 @@ vector<Point> findIntersection(Mat& src, vector<Vec2f>& lines){
 			double rho2 = lines[j][0];
 			double theta2 = lines[j][1];
 			if(abs(theta1 - theta2)*180/CV_PI < 10) continue;
+
+			//if(abs(theta1-theta2)*180/CV_PI > 60) continue;
 			double a2 = cos(theta2), b2 = sin(theta2);
 			double zCross = (a1*b2-a2*b1);
 			double xCross = (b1*(-1)*rho2 - b2*(-1)*rho1)/zCross;
@@ -196,9 +202,6 @@ vector<Point> findIntersection(Mat& src, vector<Vec2f>& lines){
 			}
 		}	
 	}
-
-
-
 	return corners;
 }
 

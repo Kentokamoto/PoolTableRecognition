@@ -11,11 +11,14 @@
 #include "find_pool_table.h"
 #include "warp.h"
 
-using namespace std;
 
+#define USEVIDEO	1//Set the value if you are using a video or image
+
+using namespace std;
 int main(int argv, char* argc[]){
 
 	printf("Hit ESC key to quit\n");
+#if USEVIDEO
 	cv::VideoCapture cap("./src/Photos/IMG_1367.MOV");//1285 or 1367
 	//cv::VideoCapture cap(0);
 	if (!cap.isOpened()) {          // check if we succeeded
@@ -30,8 +33,8 @@ int main(int argv, char* argc[]){
 		if (imageInput.empty()) break;
 
 		cv::Mat outputImage;
-		cv::resize(imageInput, outputImage, cv::Size(imageInput.cols/2, imageInput.rows/2));	
-		vector<cv::Point> corners = findTable(outputImage);
+		cv::resize(imageInput, outputImage, cv::Size(imageInput.cols, imageInput.rows));	
+		std::vector<cv::Point> corners = findTable(outputImage);
 		if(corners.size() == 4){
 			cv::Mat ortho = warpImage(corners, outputImage);
 			findBalls(ortho);
@@ -39,9 +42,21 @@ int main(int argv, char* argc[]){
 		
 
 		//cv::namedWindow("My Image", cv::WINDOW_NORMAL);
-		cv::imshow("Marker", outputImage);
+		//cv::imshow("Marker", outputImage);
 		if (cv::waitKey(1) == 27)  break;  // hit ESC (ascii code 27) to quit
 
 	}
+#else
+	cv::Mat image = cv::imread("./src/Photos/IMG_1360.jpg");
+	//cv::resize(image, image, cv::Size(image.cols/4, image.rows/4));
+	std::vector<cv::Point> corners = findTable(image);
+	if(corners.size() == 4){
+		cv::Mat ortho = warpImage(corners, image);
+		findBalls(ortho);
+	}	
+	cv::namedWindow("Initial Image",cv::WINDOW_AUTOSIZE);
+	cv::imshow("Initial Image", image);
+	if (cv::waitKey(0) == 27)  return EXIT_SUCCESS;
+#endif
 	return EXIT_SUCCESS;
 }

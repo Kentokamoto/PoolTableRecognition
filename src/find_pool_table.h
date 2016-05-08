@@ -5,5 +5,6 @@
 std::vector<cv::Point> findTable(cv::Mat src);
 std::vector<cv::Point> findIntersection(cv::Mat&,std::vector<cv::Vec2f>&);
 std::vector<cv::Point> averagePoints(std::vector<cv::Point> corner);
+double ptDistance(cv::Point& a, cv::Point& b);
 #endif
 

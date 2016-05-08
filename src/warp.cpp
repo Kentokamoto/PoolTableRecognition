@@ -7,13 +7,24 @@ using namespace std;
 using namespace cv;
 
 
+
+template <typename T>
+vector<size_t> sort_indexes(const vector<T> &v) {
+
+  // initialize original index locations
+	vector<size_t> idx(v.size());
+	for (size_t i = 0; i != idx.size(); ++i) idx[i] = i;
+
+  // sort indexes based on comparing values in v
+		sort(idx.begin(), idx.end(),
+			[&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+
+	return idx;
+}
+
 Mat warpImage(vector<Point>& corners, Mat src){
 	Point2f srcTri[3];
 	Point2f dstTri[3];
-
-	Mat rot_mat( 2, 3, CV_32FC1 );
-	Mat warp_mat( 2, 3, CV_32FC1 );
-	Mat warp_dst, warp_rotate_dst;
 
 
 		// Create a list of "ortho" square corner points.
@@ -22,21 +33,40 @@ Mat warpImage(vector<Point>& corners, Mat src){
 
 	vector<cv::Point2f> squareOrtho;
 	squareOrtho.push_back(cv::Point2f(0, 0));
-	squareOrtho.push_back(cv::Point2f(0, 500));
-	squareOrtho.push_back(cv::Point2f(1000, 0));
-	squareOrtho.push_back(cv::Point2f(1000, 500));
+	squareOrtho.push_back(cv::Point2f(0, 750));
+	squareOrtho.push_back(cv::Point2f(1500, 0));
+	squareOrtho.push_back(cv::Point2f(1500, 750));
 
-
+	// Organize the corner points so we can distinguish long side and short side.
 	vector<Point2f> correctedCorner;
-	for(size_t i = 0; i < corners.size(); i++){
-		Point2f temp(corners[i].x, corners[i].y);
+	vector<double> length;
+	for(size_t i = 1; i < corners.size(); i++){
+		double temp = 0.0;
+		temp = ptDistance(corners[0], corners[i]);
+		length.push_back(temp);
+	}
+	Point2f temp(corners[0].x, corners[0].y);
+	correctedCorner.push_back(temp);
+	circle(src, corners[0],4,Scalar(255,255,0),1,10,0);
+	for(auto i: sort_indexes(length)){
+		Point2f temp(corners[i+1].x, corners[i+1].y);
 		correctedCorner.push_back(temp);
 	}
+
+
+	// line(warp_dst,correctedCorner.at(0), correctedCorner.at(2), Scalar(255,0,0),3, 8, 0); //Blue
+	// line(warp_dst,correctedCorner.at(2), correctedCorner.at(3), Scalar(0,255,0),3, 8, 0); //Green
+	// line(warp_dst,correctedCorner.at(3), correctedCorner.at(1), Scalar(0,0,255),3, 8, 0); //Red
+	// line(warp_dst,correctedCorner.at(1), correctedCorner.at(0), Scalar(255,255,0),3, 8, 0); //Cyan
+
+	//imshow("Boundary", warp_dst);
+	// vector<Point2f> correctedCorner;
+
 
 	cv::Mat M = cv::getPerspectiveTransform(correctedCorner, squareOrtho);
 
 	cv::Mat imageSquare;
-	const int cellSize = 50;
+	const int cellSize = 80;
 	cv::Size imageSquareSize(20 * cellSize, 10 * cellSize);
 	cv::warpPerspective(src, imageSquare, M, imageSquareSize);
 	cv::imshow("OrthoPhoto", imageSquare);
@@ -63,19 +93,5 @@ void findBalls(Mat src){
 	//Show Image
 	cv::imshow("redonly", ballOnly);
 
-	// HoughCircles( src_gray, circles, CV_HOUGH_GRADIENT, 1, src_gray.rows/8, 300, 10, 0, 0 );
-
-	// for( size_t i = 0; i < circles.size(); i++ )
-	// {
-	// 	Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
-	// 	int radius = cvRound(circles[i][2]);
- //   // circle center
-	// 	circle( src, center, 3, Scalar(0,255,0), -1, 8, 0 );
- //   // circle outline
-	// 	circle( src, center, radius, Scalar(0,0,255), 3, 8, 0 );
-	// }
-
-	// namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
-	// imshow( "Hough Circle Transform Demo", src );
 
 }
