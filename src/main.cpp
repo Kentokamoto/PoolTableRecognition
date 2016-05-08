@@ -10,13 +10,13 @@
 #include <stdio.h>
 #include "find_pool_table.h"
 #include "warp.h"
- 
+
 using namespace std;
 
 int main(int argv, char* argc[]){
 
 	printf("Hit ESC key to quit\n");
-	cv::VideoCapture cap("./src/Photos/IMG_1285.MOV");
+	cv::VideoCapture cap("./src/Photos/IMG_1367.MOV");//1285 or 1367
 	//cv::VideoCapture cap(0);
 	if (!cap.isOpened()) {          // check if we succeeded
 		printf("error - can't open the video file; hit enter key to quit\n");
@@ -33,7 +33,8 @@ int main(int argv, char* argc[]){
 		cv::resize(imageInput, outputImage, cv::Size(imageInput.cols/2, imageInput.rows/2));	
 		vector<cv::Point> corners = findTable(outputImage);
 		if(corners.size() == 4){
-			warpImage(corners, outputImage);
+			cv::Mat ortho = warpImage(corners, outputImage);
+			findBalls(ortho);
 		}
 		
 
