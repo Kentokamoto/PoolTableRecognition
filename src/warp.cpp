@@ -6,7 +6,7 @@
 using namespace std;
 using namespace cv;
 
-
+RNG rng(12345);
 
 template <typename T>
 vector<size_t> sort_indexes(const vector<T> &v) {
@@ -33,9 +33,9 @@ Mat warpImage(vector<Point>& corners, Mat src){
 
 	vector<cv::Point2f> squareOrtho;
 	squareOrtho.push_back(cv::Point2f(0, 0));
-	squareOrtho.push_back(cv::Point2f(0, 750));
-	squareOrtho.push_back(cv::Point2f(1500, 0));
-	squareOrtho.push_back(cv::Point2f(1500, 750));
+	squareOrtho.push_back(cv::Point2f(0, 500));
+	squareOrtho.push_back(cv::Point2f(1000, 0));
+	squareOrtho.push_back(cv::Point2f(1000, 500));
 
 	// Organize the corner points so we can distinguish long side and short side.
 	vector<Point2f> correctedCorner;
@@ -66,7 +66,7 @@ Mat warpImage(vector<Point>& corners, Mat src){
 	cv::Mat M = cv::getPerspectiveTransform(correctedCorner, squareOrtho);
 
 	cv::Mat imageSquare;
-	const int cellSize = 80;
+	const int cellSize = 50;
 	cv::Size imageSquareSize(20 * cellSize, 10 * cellSize);
 	cv::warpPerspective(src, imageSquare, M, imageSquareSize);
 	cv::imshow("OrthoPhoto", imageSquare);
@@ -76,22 +76,95 @@ Mat warpImage(vector<Point>& corners, Mat src){
 }
 
 void findBalls(Mat src){
-	Mat src_gray,color_dst;
-	cvtColor( src, src_gray, CV_BGR2GRAY );
-	//GaussianBlur( src_gray, src_gray, Size(9, 9), 2, 2 );
-	cvtColor( src_gray, color_dst, CV_GRAY2BGR );
-	// imshow("", color_dst);
-	vector<Vec3f> circles;
+
+    /* Convert from Red-Green-Blue to Hue-Saturation-Value */
+	Mat hsv;
+	cvtColor( src, hsv, CV_BGR2HSV );
+
+    // Quantize the hue to 30 levels
+    // and the saturation to 32 levels
+	int hbins = 30, sbins = 32;
+	int histSize[] = {hbins, sbins};
+    // hue varies from 0 to 179, see cvtColor
+	float hranges[] = { 0, 180 };
+    // saturation varies from 0 (black-gray-white) to
+    // 255 (pure spectrum color)
+	float sranges[] = { 0, 256 };
+	const float* ranges[] = { hranges, sranges };
+	MatND hist;
+    // we compute the histogram from the 0-th and 1-st channels
+	int channels[] = {0, 1};
+
+    calcHist( &hsv, 1, channels, Mat(), // do not use mask
+    	hist, 1, histSize, ranges,
+             true, // the histogram is uniform
+             false );
+    double maxVal=0;
+    double minVal = -1;
+    minMaxLoc(hist, &minVal, &maxVal, 0, 0);
+
+    int scale = 10;
+    Mat histImg = Mat::zeros(sbins*scale, hbins*10, CV_8UC3);
+
+    for( int h = 0; h < hbins; h++ )
+    	for( int s = 0; s < sbins; s++ )
+    	{
+    		float binVal = hist.at<float>(h, s);
+    		int intensity = cvRound(binVal*255/maxVal);
+    		rectangle( histImg, Point(h*scale, s*scale),
+    			Point( (h+1)*scale - 1, (s+1)*scale - 1),
+    			Scalar::all(intensity),
+    			CV_FILLED );
+    	}
+
+    	namedWindow( "Source", 1 );
+    	imshow( "Source", src );
+
+    	namedWindow( "H-S Histogram", 1 );
+    	imshow( "H-S Histogram", histImg );
+    	waitKey();
+
+    	imshow("Example", hsv);
+
+    	vector<Mat> hsv_channels;
+    	split(hsv, hsv_channels);
+    	Mat v_Channel = hsv_channels[2];
+
+    	int largest_area=0;
+    	int largest_contour_index=0;
+    	Rect bounding_rect;
+
+    vector<vector<Point>> contours; // Vector for storing contour
+    vector<Vec4i> hierarchy;
+    threshold(v_Channel,v_Channel, 0,maxVal,THRESH_OTSU);
+    findContours(v_Channel,contours,hierarchy,CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
+
+	/// Approximate contours to polygons + get bounding rects and circles
+    vector<vector<Point> > contours_poly( contours.size() );
+    vector<Rect> boundRect( contours.size() );
+    vector<Point2f>center( contours.size() );
+    vector<float>radius( contours.size() );
+
+    for( int i = 0; i < contours.size(); i++ )
+    	{ approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
+    		boundRect[i] = boundingRect( Mat(contours_poly[i]) );
+    		minEnclosingCircle( (Mat)contours_poly[i], center[i], radius[i] );
+    	}
 
 
-	Mat backOnly,ballOnly;
-	assert(src.type() == CV_8UC3);
+  /// Draw polygonal contour + bonding rects + circles
+    	Mat drawing = Mat::zeros( v_Channel.size(), CV_8UC3 );
+    	for( int i = 0; i< contours.size(); i++ )
+    	{
+    		if((int)radius[i] > 40 || (int)radius[i] < 10) continue;
+    		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+    		drawContours( src, contours_poly, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
+    		circle( src, center[i], (int)radius[i], color, 2, 8, 0 );
+    	}
+    	/// Show in a window
+  		namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
+  		imshow( "Contours", src );
 
-	inRange(src, Scalar(27, 27, 35), Scalar(110, 110, 110), backOnly);
-	ballOnly = 255-backOnly;
-
-	//Show Image
-	cv::imshow("redonly", ballOnly);
 
 
-}
+    }
