@@ -9,7 +9,7 @@ LDFLAGS =  -L/usr/local/opt/opencv3/lib
 CPPFLAGS = $(COMMONFLAGS) -I/usr/local/opt/opencv3/include
 LDLIBS:=  -lopencv_core -lopencv_videoio -lopencv_highgui \
 	  -lopencv_imgproc -lopencv_video -lopencv_objdetect \
-	  `pkg-config opencv3 --libs`
+	  `pkg-config opencv --cflags --libs`
 SRCS = $(shell find src -name '*.cpp')
 OBJS = $(SRCS:src/%.cpp=bin/%.o)
 	DEPS = $(SRCS:src/%.cpp=bin/%.d)
