@@ -26,8 +26,10 @@ cv::Point2f computeIntersect(cv::Vec4i a, cv::Vec4i b)
 	}  
 	else  
 		return cv::Point2f(-1, -1);  
-}  
+}
 
+// Called when looking for a table.
+// This will First Find
 vector<Point> findTable(Mat src){
 	Mat src_gray, detected_edges, cdst;	
 	char* window_name = "Edge Map";
