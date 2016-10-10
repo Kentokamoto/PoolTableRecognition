@@ -17,7 +17,7 @@ using namespace cv;
 
 class Stitch{
 private:
-	cv::Mat outputImage;
+	Mat outputImage;
 	static const int FRAME_SKIP = 40;
 
 public:
@@ -34,7 +34,7 @@ public:
 	/*
 	 * Extract the SIFT features
 	 */
-	void extractSIFT(cv::Mat frame); // Probably should return sift features
+	void extractSIFT(Mat frame); // Probably should return sift features
 
 	/*
 	 * Find Closes matching features from image output

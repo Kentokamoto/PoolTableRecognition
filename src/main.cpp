@@ -20,7 +20,7 @@ int main(int argv, char* argc[]){
 
 	printf("Hit ESC key to quit\n");
 #if USEVIDEO
-	cv::VideoCapture cap("./src/Photos/Scan/IMG_0014.m4v");//1285 or 1367
+	cv::VideoCapture cap("./src/Photos/NewScan/File_000.mov");//1285 or 1367
 	//cv::VideoCapture cap(0);
 	if (!cap.isOpened()) {          // check if we succeeded
 		printf("error - can't open the video file; hit enter key to quit\n");
