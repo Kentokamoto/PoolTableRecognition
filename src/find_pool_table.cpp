@@ -31,15 +31,17 @@ cv::Point2f computeIntersect(cv::Vec4i a, cv::Vec4i b)
 // Called when looking for a table.
 // This will First Find
 vector<Point> findTable(Mat src){
-	Mat src_gray, detected_edges, cdst;	
+	Mat src_gray, src_hsv,detected_edges, cdst;	
 	char* window_name = "Edge Map";
 	double lowThreshold = 50;
 	double highThreshold = 150;
 	int kernel_size = 3;
 
 	/// Convert the image to grayscale
-	cvtColor( src, src_gray, CV_BGR2GRAY );
-
+	cvtColor(src, src_hsv, CV_BGR2HSV);
+	cvtColor( src_hsv, src_gray, CV_BGR2GRAY );
+	imshow("HSV" ,src_hsv);
+	waitKey(0);
 
 
 	/// Reduce noise with a kernel 7x7

@@ -8,8 +8,8 @@ Mat Stitch::stitchImages(VideoCapture &cap){
 		for( int frameNum = 0; frameNum < cap.get(CV_CAP_PROP_FRAME_COUNT); frameNum++){
 				Mat frame;
 				if(!cap.read(frame)){
-					std::cout << "Failed to read in frame" << std::endl;	
-					break;
+						std::cout << "Failed to read in frame" << std::endl;	
+						break;
 				}
 				Mat laplaceImg;
 				Laplacian(frame, laplaceImg, CV_64F);
@@ -17,55 +17,74 @@ Mat Stitch::stitchImages(VideoCapture &cap){
 				cv::meanStdDev(laplaceImg, mu, sigma);
 
 				double focusMeasure = sigma.val[0]*sigma.val[0];	
-				if( focusMeasure > 80.0){
-						std::cout << "Variance: " << focusMeasure << std::endl;				
+				std::cout << "Variance: " << focusMeasure << std::endl;				
+
+				if( focusMeasure > 60.0){
 						sharpImages.push_back(frame);
 						//imshow( "Frame", frame );
 						//if(waitKey(0) == 27) {
 						//		exit(EXIT_FAILURE);
 						//}
 				}
-				
-								/*if(cap.get(CV_CAP_PROP_POS_FRAMES) == 0){
-								  cap.read(outputImage);
-								  cv::resize(outputImage, outputImage, cv::Size(outputImage.cols/1.5, outputImage.rows/1.5));
-								  imshow("image", outputImage);
-								  }else{
-								  Mat frame;
-								  if(!cap.read(frame)){
-								  std::cout << "Failed to read frame" << std::endl;
-								  break;
-								  }else{
-								  if((int) cap.get(CV_CAP_PROP_POS_FRAMES)%FRAME_SKIP == 0){
-								  std::cout << "Frame: " << cap.get(CV_CAP_PROP_POS_FRAMES) << std::endl;
-								  cv::resize(frame, frame, cv::Size(frame.cols/1.5, frame.rows/1.5));
 
-								  if(waitKey(0) == 27) {
-								  exit(EXIT_FAILURE);
-								  } // hit ESC (ascii code 27) to quit
-								  extractSIFT(frame);
-								  }
-								  }
-								  }*/
+				/*if(cap.get(CV_CAP_PROP_POS_FRAMES) == 0){
+				  cap.read(outputImage);
+				  cv::resize(outputImage, outputImage, cv::Size(outputImage.cols/1.5, outputImage.rows/1.5));
+				  imshow("image", outputImage);
+				  }else{
+				  Mat frame;
+				  if(!cap.read(frame)){
+				  std::cout << "Failed to read frame" << std::endl;
+				  break;
+				  }else{
+				  if((int) cap.get(CV_CAP_PROP_POS_FRAMES)%FRAME_SKIP == 0){
+				  std::cout << "Frame: " << cap.get(CV_CAP_PROP_POS_FRAMES) << std::endl;
+				  cv::resize(frame, frame, cv::Size(frame.cols/1.5, frame.rows/1.5));
+
+				  if(waitKey(0) == 27) {
+				  exit(EXIT_FAILURE);
+				  } // hit ESC (ascii code 27) to quit
+				  extractSIFT(frame);
+				  }
+				  }
+				  }*/
 		}
 		sharpImages.erase(sharpImages.begin()+1,sharpImages.end()-1);
-		std::cout << sharpImages.size() << std::endl;
-		Stitcher stitcher = Stitcher::createDefault(false);
-		Stitcher::Status status = stitcher.stitch(sharpImages,outputImage);
-		for(int i = 0; i < sharpImages.size(); i++){
-			imshow("Frame", sharpImages[i]);
-			if(waitKey(0) == 27){
-				exit(EXIT_FAILURE);
-			}
-		}
-		if(status == Stitcher::OK){
-				imshow("Final Output", outputImage);
-		}else{
-				std::cout << "Failed" << std::endl;
-		}	
-		
 
-		return outputImage;
+
+		//std::cout << sharpImages.size() << std::endl;
+		Stitcher stitcher = Stitcher::createDefault(false);
+		stitcher.setRegistrationResol(-1); /// 0.6
+		stitcher.setSeamEstimationResol(-1);   /// 0.1
+		stitcher.setCompositingResol(-1);   //1
+		stitcher.setPanoConfidenceThresh(-1);   //1
+		stitcher.setWaveCorrection(true);
+		stitcher.setWaveCorrectKind(detail::WAVE_CORRECT_HORIZ);
+		Stitcher::Status status = stitcher.stitch(sharpImages,outputImage);
+		//for(int i = 0; i < sharpImages.size(); i++){
+		//		imshow("Frame", sharpImages[i]);
+		//		if(waitKey(0) == 27){
+		//				exit(EXIT_FAILURE);
+		//		}
+		//}
+		if(status == Stitcher::OK){
+
+				//imshow("Frame", outputImage);
+				std::vector<int> compression_params;
+				compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+				compression_params.push_back(9);
+
+				imwrite("output.png", outputImage, compression_params);
+
+				//			if(waitKey(0) == 27){
+				//			exit(EXIT_FAILURE);
+				//		}
+				//}else{
+				//		std::cout << "Failed" << std::endl;
+				//}	
+
+}
+return outputImage;
 }
 
 struct point_sorter
@@ -85,8 +104,8 @@ void Stitch::extractSIFT(Mat frame){
 		cvtColor(frame, grayFrame, CV_BGR2GRAY);
 		cvtColor(outputImage, grayOutputImage, CV_BGR2GRAY);
 
-		imshow("Gray Frame", grayFrame);
-		imshow("Gray Output Image", grayOutputImage);
+		//imshow("Gray Frame", grayFrame);
+		//imshow("Gray Output Image", grayOutputImage);
 
 		// Set keypoints
 
