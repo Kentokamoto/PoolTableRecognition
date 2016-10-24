@@ -45,8 +45,11 @@ vector<Point> findTable(Mat src){
 
 
 	/// Reduce noise with a kernel 7x7
-	blur( src_gray, detected_edges, Size(8,8) );
-
+	blur( src_gray, detected_edges, Size(3,3) );
+	imshow("Blur", detected_edges);
+	if(waitKey(0) == 27){
+			exit(1);
+	}
 	/*
 	 * Otsu Thresholding?
 	 */
@@ -56,8 +59,8 @@ vector<Point> findTable(Mat src){
 			255, 
 			CV_THRESH_BINARY | CV_THRESH_OTSU);
 	//Set the Threshold Values
-	lowThreshold = otsu_thresh_val;
-	highThreshold = otsu_thresh_val * 1.4;
+	lowThreshold = otsu_thresh_val*0.5;
+	highThreshold = otsu_thresh_val;
 
 	/// Canny detector
 	Canny( detected_edges, detected_edges, lowThreshold, highThreshold, kernel_size );

@@ -69,48 +69,53 @@ int main(int argv, char* argc[]){
 
 	// }
 #else
-	cv::Mat image = cv::imread("./src/Photos/NewScan/File_002.jpeg");
-	if(image.empty() == true){
-			std::cout << "Failed " << std::endl;
-	}
-	//cv::Mat image2 = cv::imread("./src/Photos/NewScan/Room00.jpeg");
-	//std::vector<Mat> images;
-	//images.push_back(cv::imread("./src/Photos/NewScan/Room00.jpeg"));
-	//images.push_back(cv::imread("./src/Photos/NewScan/Room01.jpeg"));
-
-
-	//Stitcher stitcher = Stitcher::createDefault(false);
-	//stitcher.setRegistrationResol(-1); /// 0.6
-	//stitcher.setSeamEstimationResol(-1);   /// 0.1
-	//stitcher.setCompositingResol(-1);   //1
-	//stitcher.setPanoConfidenceThresh(-1);   //1
-	//stitcher.setWaveCorrection(true);
-	//stitcher.setWaveCorrectKind(detail::WAVE_CORRECT_HORIZ);
-	//cv::Mat outputImage;
-	//Stitcher::Status status = stitcher.stitch(images,outputImage);
-	
-	//vector<int> compression_params;
-	//compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-	//compression_params.push_back(9);
-
-	//if(Stitcher::OK == status){
-	//	imwrite("image.png", outputImage,compression_params );
-	//}else{
-	//	std::cout << "FAiled" << std::endl;
+	//cv::Mat image = cv::imread("./src/Photos/Double/1/IMG_0106.jpg");
+	//cv::Mat image2 = cv::imread("./src/Photos/Double/1/IMG_0107.jpg");
+	//if(image.empty() == true){
+	//		std::cout << "Failed " << std::endl;
 	//}
-	//cv::resize(image, image, cv::Size(image.cols/4, image.rows/4));
-	std::vector<cv::Point> corners = findTable(image);
-	if(corners.size() == 4){
-		cv::Mat ortho = warpImage(corners, image);
-		imshow("Ortho", ortho);
+	//cv::Mat image2 = cv::imread("./src/Photos/NewScan/Room00.jpeg");
+	std::vector<Mat> images;
+	images.push_back(cv::imread("./src/Photos/Double/1/IMG_0106.jpg"));
+	images.push_back(cv::imread("./src/Photos/Double/1/IMG_0108.jpg"));
+
+
+	Stitcher stitcher = Stitcher::createDefault(false);
+	stitcher.setRegistrationResol(-1); /// 0.6
+	stitcher.setSeamEstimationResol(-1);   /// 0.1
+	stitcher.setCompositingResol(-1);   //1
+	stitcher.setPanoConfidenceThresh(-1);   //1
+	stitcher.setWaveCorrection(true);
+	stitcher.setWaveCorrectKind(detail::WAVE_CORRECT_HORIZ);
+	cv::Mat outputImage;
+	Stitcher::Status status = stitcher.stitch(images,outputImage);
+	
+	vector<int> compression_params;
+	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+	compression_params.push_back(9);
+
+	if(Stitcher::OK == status){
+		imshow("Stitch", outputImage);
 		if(waitKey(0) == 27){
 				exit(EXIT_FAILURE);
 		}
-		findBalls(ortho);
-	}	
-	cv::namedWindow("Initial Image",cv::WINDOW_AUTOSIZE);
+			imwrite("image.png", outputImage,compression_params );
+	}else{
+		std::cout << "FAiled" << std::endl;
+	}
+	//cv::resize(image, image, cv::Size(image.cols/2, image.rows/2));
+	//std::vector<cv::Point> corners = findTable(image);
+	//if(corners.size() == 4){
+	//	cv::Mat ortho = warpImage(corners, image);
+	//	imshow("Ortho", ortho);
+	//	if(waitKey(0) == 27){
+	//			exit(EXIT_FAILURE);
+	//	}
+	//	findBalls(ortho);
+	//}	
+	//cv::namedWindow("Initial Image",cv::WINDOW_AUTOSIZE);
 //	cv::imshow("Initial Image", image);
-	if (cv::waitKey(0) == 27)  return EXIT_SUCCESS;
+	//if (cv::waitKey(0) == 27)  return EXIT_SUCCESS;
 #endif
 	return EXIT_SUCCESS;
 }

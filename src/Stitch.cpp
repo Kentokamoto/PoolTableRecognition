@@ -50,7 +50,12 @@ Mat Stitch::stitchImages(VideoCapture &cap){
 				  }*/
 		}
 		sharpImages.erase(sharpImages.begin()+1,sharpImages.end()-1);
-
+		for(int i = 0; i < sharpImages.size(); i++){
+				imshow("Frame", sharpImages[i]);
+				if(waitKey(0) == 27){
+						exit(EXIT_FAILURE);
+				}
+		}
 
 		//std::cout << sharpImages.size() << std::endl;
 		Stitcher stitcher = Stitcher::createDefault(false);
@@ -61,12 +66,7 @@ Mat Stitch::stitchImages(VideoCapture &cap){
 		stitcher.setWaveCorrection(true);
 		stitcher.setWaveCorrectKind(detail::WAVE_CORRECT_HORIZ);
 		Stitcher::Status status = stitcher.stitch(sharpImages,outputImage);
-		//for(int i = 0; i < sharpImages.size(); i++){
-		//		imshow("Frame", sharpImages[i]);
-		//		if(waitKey(0) == 27){
-		//				exit(EXIT_FAILURE);
-		//		}
-		//}
+		
 		if(status == Stitcher::OK){
 
 				//imshow("Frame", outputImage);
