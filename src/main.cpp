@@ -20,33 +20,33 @@ int main(int argv, char* argc[]){
 
 	printf("Hit ESC key to quit\n");
 #if USEVIDEO
-	cv::VideoCapture cap("./src/Photos/NewScan/File_009.mp4");//1285 or 1367
-	//cv::VideoCapture cap(0);
-	if (!cap.isOpened()) {          // check if we succeeded
-		printf("error - can't open the video file; hit enter key to quit\n");
-		cin.ignore().get();
-		return EXIT_FAILURE;
-	}
-	Stitch stitch;
-	cv::Mat outputImage = stitch.stitchImages(cap);
-	if(outputImage.empty()){
-		exit(EXIT_FAILURE);
-	}
-	std::vector<cv::Point> corners = findTable(outputImage);
-	if(corners.size() == 4){
-			std::cout << "Found Corners" << std::endl;
-			cv::Mat ortho = warpImage(corners, outputImage);
-			vector<int> compression_params;
-			compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-			compression_params.push_back(9);
-			imwrite("Ortho.png", ortho,compression_params );
+	// cv::VideoCapture cap("./src/Photos/NewScan/File_009.mp4");//1285 or 1367
+	// //cv::VideoCapture cap(0);
+	// if (!cap.isOpened()) {          // check if we succeeded
+	// 	printf("error - can't open the video file; hit enter key to quit\n");
+	// 	cin.ignore().get();
+	// 	return EXIT_FAILURE;
+	// }
+	// Stitch stitch;
+	// cv::Mat outputImage = stitch.stitchImages(cap);
+	// if(outputImage.empty()){
+	// 	exit(EXIT_FAILURE);
+	// }
+	// std::vector<cv::Point> corners = findTable(outputImage);
+	// if(corners.size() == 4){
+	// 		std::cout << "Found Corners" << std::endl;
+	// 		cv::Mat ortho = warpImage(corners, outputImage);
+	// 		vector<int> compression_params;
+	// 		compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+	// 		compression_params.push_back(9);
+	// 		imwrite("Ortho.png", ortho,compression_params );
 
 
-			imshow("Orthonormal", ortho);
-			if(waitKey(0) == 27){
-					exit(EXIT_FAILURE);
-			}
-	}
+	// 		imshow("Orthonormal", ortho);
+	// 		if(waitKey(0) == 27){
+	// 				exit(EXIT_FAILURE);
+	// 		}
+	// }
 	// while (true){
 	// 	// Read in the image
 	// 	cv::Mat imageInput;
@@ -76,34 +76,23 @@ int main(int argv, char* argc[]){
 	//}
 	//cv::Mat image2 = cv::imread("./src/Photos/NewScan/Room00.jpeg");
 	std::vector<Mat> images;
-	images.push_back(cv::imread("./src/Photos/Double/1/IMG_0106.jpg"));
-	images.push_back(cv::imread("./src/Photos/Double/1/IMG_0108.jpg"));
-
-
-	Stitcher stitcher = Stitcher::createDefault(false);
-	stitcher.setRegistrationResol(-1); /// 0.6
-	stitcher.setSeamEstimationResol(-1);   /// 0.1
-	stitcher.setCompositingResol(-1);   //1
-	stitcher.setPanoConfidenceThresh(-1);   //1
-	stitcher.setWaveCorrection(true);
-	stitcher.setWaveCorrectKind(detail::WAVE_CORRECT_HORIZ);
-	cv::Mat outputImage;
-	Stitcher::Status status = stitcher.stitch(images,outputImage);
-	
+	images.push_back(cv::imread("./src/Photos/NewScan/6/IMG_0149.jpg"));
+	images.push_back(cv::imread("./src/Photos/NewScan/6/IMG_0150.jpg"));
+		
+	Stitch stitch;
+	cv::Mat outputImage = stitch.stitchImages(images);
 	vector<int> compression_params;
 	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
 	compression_params.push_back(9);
+	imwrite("final.png", outputImage,compression_params );
 
-	if(Stitcher::OK == status){
-		imshow("Stitch", outputImage);
-		if(waitKey(0) == 27){
-				exit(EXIT_FAILURE);
-		}
-			imwrite("image.png", outputImage,compression_params );
-	}else{
-		std::cout << "FAiled" << std::endl;
-	}
-	//cv::resize(image, image, cv::Size(image.cols/2, image.rows/2));
+	// vector<int> compression_params;
+	// compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+	// compression_params.push_back(9);
+
+	cv::resize(outputImage, outputImage, cv::Size(outputImage.cols/2, outputImage.rows/2));
+	imshow("Stitch", outputImage);
+	waitKey(0);
 	//std::vector<cv::Point> corners = findTable(image);
 	//if(corners.size() == 4){
 	//	cv::Mat ortho = warpImage(corners, image);

@@ -29,12 +29,12 @@ public:
 	/*
 	 * Function that combines all of the subfunctions into one
 	 */
-	cv::Mat stitchImages(cv::VideoCapture &cap);
+	cv::Mat stitchImages(std::vector<cv::Mat> input);
 
 	/*
 	 * Extract the SIFT features
 	 */
-	void extractSIFT(Mat frame); // Probably should return sift features
+	void extractSIFT(Mat frame1, Mat frame2); // Probably should return sift features
 
 	/*
 	 * Find Closes matching features from image output
