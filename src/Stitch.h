@@ -50,6 +50,11 @@ public:
 	  */
 	void stichFrame();
 
+	/*
+	 * Remove black borders and convert them to transparent
+	 */
+	void removeBlack(cv::Mat& input);
+
 };
 
 

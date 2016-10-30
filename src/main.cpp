@@ -76,9 +76,10 @@ int main(int argv, char* argc[]){
 	//}
 	//cv::Mat image2 = cv::imread("./src/Photos/NewScan/Room00.jpeg");
 	std::vector<Mat> images;
-	images.push_back(cv::imread("./src/Photos/NewScan/6/IMG_0149.jpg"));
-	images.push_back(cv::imread("./src/Photos/NewScan/6/IMG_0150.jpg"));
-		
+	images.push_back(cv::imread("./src/Photos/Exposure/1/IMG_0169.jpg"));
+	images.push_back(cv::imread("./src/Photos/Exposure/1/IMG_0168.jpg"));
+	images.push_back(cv::imread("./src/Photos/Exposure/1/IMG_0167.jpg"));
+	images.push_back(cv::imread("./src/Photos/Exposure/1/IMG_0166.jpg"));
 	Stitch stitch;
 	cv::Mat outputImage = stitch.stitchImages(images);
 	vector<int> compression_params;
