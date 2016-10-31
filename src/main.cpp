@@ -56,7 +56,8 @@ int main(int argv, char* argc[]){
 	// 	// Resize the image and put it in outputImage
 	// 	cv::Mat outputImage;
 	// 	cv::resize(imageInput, outputImage, cv::Size(imageInput.cols, imageInput.rows));	
-	// 	std::vector<cv::Point> corners = findTable(outputImage);
+	// 	std::vector<cv::Point> corn
+	ers = findTable(outputImage);
 	// 	if(corners.size() == 4){
 	// 		cv::Mat ortho = warpImage(corners, outputImage);
 	// 		findBalls(ortho);
@@ -76,10 +77,10 @@ int main(int argv, char* argc[]){
 	//}
 	//cv::Mat image2 = cv::imread("./src/Photos/NewScan/Room00.jpeg");
 	std::vector<Mat> images;
-	images.push_back(cv::imread("./src/Photos/Exposure/1/IMG_0169.jpg"));
-	images.push_back(cv::imread("./src/Photos/Exposure/1/IMG_0168.jpg"));
-	images.push_back(cv::imread("./src/Photos/Exposure/1/IMG_0167.jpg"));
-	images.push_back(cv::imread("./src/Photos/Exposure/1/IMG_0166.jpg"));
+	images.push_back(cv::imread("./src/Photos/Exposure/2/IMG_0170.jpg"));
+	images.push_back(cv::imread("./src/Photos/Exposure/2/IMG_0171.jpg"));
+	images.push_back(cv::imread("./src/Photos/Exposure/2/IMG_0172.jpg"));
+	//images.push_back(cv::imread("./src/Photos/Exposure/1/IMG_0166.jpg"));
 	Stitch stitch;
 	cv::Mat outputImage = stitch.stitchImages(images);
 	vector<int> compression_params;

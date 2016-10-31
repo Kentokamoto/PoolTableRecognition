@@ -34,7 +34,7 @@ public:
 	/*
 	 * Extract the SIFT features
 	 */
-	void extractSIFT(Mat frame1, Mat frame2); // Probably should return sift features
+	void extractSIFT(Mat frame1, Mat frame2,int index); // Probably should return sift features
 
 	/*
 	 * Find Closes matching features from image output

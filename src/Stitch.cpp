@@ -7,7 +7,7 @@
  	outputImage = input[0];
 
  	for(int i = 1; i < input.size(); i++){
- 		extractSIFT(outputImage,input[i]);
+ 		extractSIFT(outputImage,input[i],i);
  	}
 
 
@@ -26,12 +26,12 @@
 /*
  * Extract the SIFT features
  */
- void Stitch::extractSIFT(Mat frame1, Mat frame2){
+ void Stitch::extractSIFT(Mat frame1, Mat frame2,int index){
  	//cv::resize(frame1, frame1, cv::Size(frame1.cols/2, frame1.rows/2));
  	//cv::resize(frame2, frame2, cv::Size(frame2.cols/2, frame2.rows/2));
  	Mat grayFrame1, grayFrame2;
- 	cvtColor(frame1, grayFrame1, CV_BGRA2GRAY);
- 	cvtColor(frame2, grayFrame2, CV_BGRA2GRAY);
+ 	cvtColor(frame1, grayFrame1, CV_BGR2GRAY);
+ 	cvtColor(frame2, grayFrame2, CV_BGR2GRAY);
  	blur( grayFrame1, grayFrame1, Size(3,3) );
  	blur( grayFrame2, grayFrame2, Size(3,3) );
 
@@ -41,7 +41,7 @@
 		//imshow("Gray Output Image", grayOutputImage);
 		//waitKey(0);
 		// Set keypoints
-
+ 	std::cout << "Starting Detection " << std::endl;
  	Ptr<xfeatures2d::SIFT> detector = xfeatures2d::SIFT::create();
  	std::vector<KeyPoint> frame1Keypoints, frame2Keypoints;
  	Mat descriptors_1, descriptors_2;
@@ -51,7 +51,7 @@
  	std::cout << "Detection Complete" << std::endl;
 
 
- 	BFMatcher flann;
+ 	BFMatcher flann;it
  	std::vector< DMatch > matches;
  	flann.match( descriptors_2, descriptors_1, matches );
 
@@ -102,15 +102,15 @@
 				// Use the Homography Matrix to warp the images
  		cv::Mat result;
  		warpPerspective(frame2,result,H,cv::Size(frame1.cols+frame2.cols,frame1.rows+frame2.rows));
- 		removeBlack(result);
- 		removeBlack(frame1);
+ 		//removeBlack(result);
+ 		//removeBlack(frame1);
  		std::cout << "Warped" << std::endl;
  		cv::Mat half(result,cv::Rect(0,0,frame1.cols,frame1.rows));
  		frame1.copyTo(half);
 
 				// trim the Black edges
  		Mat grayResult;
- 		cvtColor(result,result,CV_BGRA2BGR);
+ 		//cvtColor(result,result,CV_BGRA2BGR);
  		cvtColor(result, grayResult, CV_BGR2GRAY);
  		Mat _img;
  		double threshVal = cv::threshold(grayResult, _img, 
@@ -128,31 +128,34 @@
  		//imshow( "Result", result );
  		outputImage = crop;
  	}
-
-
-
-// Mat img_matches;
-// 			drawMatches( frame1, frame1Keypoints, frame2, frame2Keypoints,
-// 				good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
-// 				std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
-//  			imshow( "Good Matches", img_matches );
-// 			waitKey(0);
-
+ 		std::string matchFileName = "Matches", keypoint1FileName = "Keypoint1" , keypoint2FileName = "Keypoint2";
+ 		matchFileName = matchFileName + "_" + std::to_string(index) + ".png";
+ 		keypoint1FileName += "_" + std::to_string(index) + ".png";
+ 		keypoint2FileName += "_" + std::to_string(index) + ".png";
+ 		std::cout << matchFileName << std::endl;
+		Mat img_matches;
+		drawMatches(  frame2, frame2Keypoints,frame1, frame1Keypoints, good_matches, img_matches );
+ 		//imshow( "Good Matches", frame1 );
+		std::vector<int> compression_params;
+		compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+		compression_params.push_back(9);
+		imwrite(matchFileName, img_matches,compression_params );
 
 
 		//-- Show detected matches
 
-
-		//     Mat frameDrawKeypoints, outputImageDrawKeypoints;
-		//     drawKeypoints(frame, frameKeypoints, frameDrawKeypoints);
-		//     drawKeypoints(outputImage, outputImageKeypoints, outputImageDrawKeypoints);
-		//     std::cout << "Keypoints drawn " << std::endl;
-		// 	imshow("Gray Frame", frameDrawKeypoints);	
-		// 	imshow("Gray Output Image", outputImageDrawKeypoints); 
-
- 	if(waitKey(0) == 27) {
- 		exit(EXIT_FAILURE);
-		} // hit ESC (ascii code 27) to quit
+		    Mat frameDrawKeypoints, outputImageDrawKeypoints;
+		    drawKeypoints(grayFrame1 , frame1Keypoints, frameDrawKeypoints);
+		    drawKeypoints(grayFrame2, frame2Keypoints, outputImageDrawKeypoints);
+		    std::cout << "Keypoints drawn " << std::endl;
+			//imshow("Frame1 Keypoints", frameDrawKeypoints);	
+			//imshow("Frame2 Keypoints", outputImageDrawKeypoints); 
+			imwrite(keypoint1FileName, outputImageDrawKeypoints,compression_params );
+			imwrite(keypoint2FileName, frameDrawKeypoints,compression_params );
+			waitKey(0);
+ 	//if(waitKey(0) == 27) {
+ //		exit(EXIT_FAILURE);
+//		} // hit ESC (ascii code 27) to quit
 
 
 	} 
