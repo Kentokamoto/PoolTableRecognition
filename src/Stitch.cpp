@@ -27,8 +27,8 @@
  * Extract the SIFT features
  */
  void Stitch::extractSIFT(Mat frame1, Mat frame2,int index){
- 	//cv::resize(frame1, frame1, cv::Size(frame1.cols/2, frame1.rows/2));
- 	//cv::resize(frame2, frame2, cv::Size(frame2.cols/2, frame2.rows/2));
+ 	cv::resize(frame1, frame1, cv::Size(frame1.cols/2, frame1.rows/2));
+ 	cv::resize(frame2, frame2, cv::Size(frame2.cols/2, frame2.rows/2));
  	Mat grayFrame1, grayFrame2;
  	cvtColor(frame1, grayFrame1, CV_BGR2GRAY);
  	cvtColor(frame2, grayFrame2, CV_BGR2GRAY);
@@ -42,7 +42,7 @@
 		//waitKey(0);
 		// Set keypoints
  	std::cout << "Starting Detection " << std::endl;
- 	Ptr<xfeatures2d::SIFT> detector = xfeatures2d::SIFT::create();
+ 	Ptr<xfeatures2d::SIFT> detector = xfeatures2d::SIFT::create(0,3,0.02,5,1.6);
  	std::vector<KeyPoint> frame1Keypoints, frame2Keypoints;
  	Mat descriptors_1, descriptors_2;
  	detector->detectAndCompute(grayFrame1, Mat(), frame1Keypoints, descriptors_1);
@@ -51,7 +51,7 @@
  	std::cout << "Detection Complete" << std::endl;
 
 
- 	BFMatcher flann;it
+ 	BFMatcher flann;
  	std::vector< DMatch > matches;
  	flann.match( descriptors_2, descriptors_1, matches );
 
@@ -71,7 +71,7 @@
 		//-- PS.- radiusMatch can also be used here.
  	std::vector< DMatch > good_matches;
  	for( int i = 0; i < descriptors_2.rows; i++ ){ 
- 		if( matches[i].distance <= max(2*min_dist, 0.02) ){
+ 		if( matches[i].distance <= max(2*min_dist, 0.02) ){// Change the threshold here?
  			good_matches.push_back( matches[i]); 
  		}
  	}
@@ -152,7 +152,7 @@
 			//imshow("Frame2 Keypoints", outputImageDrawKeypoints); 
 			imwrite(keypoint1FileName, outputImageDrawKeypoints,compression_params );
 			imwrite(keypoint2FileName, frameDrawKeypoints,compression_params );
-			waitKey(0);
+			//waitKey(0);
  	//if(waitKey(0) == 27) {
  //		exit(EXIT_FAILURE);
 //		} // hit ESC (ascii code 27) to quit
