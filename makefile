@@ -33,7 +33,7 @@ bin/%.o: src/%.cpp
 #	$(CC) $(OBJS) $(CFLAGS) -o cv $(LDFLAGS) $(CPPFLAGS) $(LDLIBS)
 #file2_exe: $(OBJS) $(HDRS)
 #	$(CC) $(PKG) $(OBJS) $(CPPFlags) -o cv $(LDFLAGS)
-run: $(NAME)
+test: $(NAME)
 	        ./$(NAME)
 
 clean:

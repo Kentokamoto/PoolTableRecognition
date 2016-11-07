@@ -11,7 +11,8 @@
 #include <stdio.h>
 #include "find_pool_table.h"
 #include "warp.h"
-#include "Stitch.h"
+#include "Stitch.h" 
+#include "TableStitch.h"
 
 #define USEVIDEO	0//Set the value if you are using a video or image
 
@@ -70,31 +71,37 @@ int main(int argv, char* argc[]){
 
 	// }
 #else
-	//cv::Mat image = cv::imread("./src/Photos/Double/1/IMG_0106.jpg");
-	//cv::Mat image2 = cv::imread("./src/Photos/Double/1/IMG_0107.jpg");
-	//if(image.empty() == true){
-	//		std::cout << "Failed " << std::endl;
-	//}
-	//cv::Mat image2 = cv::imread("./src/Photos/NewScan/Room00.jpeg");
-	std::vector<Mat> images;
-	images.push_back(cv::imread("./src/Photos/Exposure/1/IMG_0169.jpg"));
-	images.push_back(cv::imread("./src/Photos/Exposure/1/IMG_0168.jpg"));
-	//images.push_back(cv::imread("./src/Photos/Exposure/1/IMG_0167.jpg"));
-	//images.push_back(cv::imread("./src/Photos/Exposure/1/IMG_0166.jpg"));
-	Stitch stitch;
-	cv::Mat outputImage = stitch.stitchImages(images);
-	vector<int> compression_params;
-	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-	compression_params.push_back(9);
-	imwrite("final.png", outputImage,compression_params );
 
-	// vector<int> compression_params;
-	// compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-	// compression_params.push_back(9);
+	Mat left = cv::imread("./src/Photos/TableHalf/3/IMG_0234.jpg");
+	Mat right = cv::imread("./src/Photos/TableHalf/3/IMG_0235.jpg");
+	std::vector<Mat> list;
+	list.push_back(left);
+	list.push_back(right);
+	TableStitch tableStitcher;
+	// tableStitcher.compute(left,right);
+	// Stitcher stitcher = Stitcher::createDefault();
+	// stitcher.setRegistrationResol(-1); /// 0.6
+	// stitcher.setSeamEstimationResol(-1);   /// 0.1
+	// stitcher.setCompositingResol(-1);   //1
+	// stitcher.setPanoConfidenceThresh(-1);   //1
+	// stitcher.setWaveCorrection(true);
+	// stitcher.setWaveCorrectKind(detail::WAVE_CORRECT_HORIZ);
+	// Mat output;
+	// Stitcher::Status status = stitcher.stitch(list, output);
+	// if(status == Stitcher::OK){
+	// 	std::vector<int> compression_params;
+	// 	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+	// 	compression_params.push_back(9);
+	// 	imwrite("Stitched.png", output,compression_params );
+	// }else{
+	// 	std::cout << "Failed" << std::endl;
+	// }
 
-	cv::resize(outputImage, outputImage, cv::Size(outputImage.cols/2, outputImage.rows/2));
-	imshow("Stitch", outputImage);
-	waitKey(0);
+
+
+	//cv::resize(outputImage, outputImage, cv::Size(outputImage.cols/2, outputImage.rows/2));
+	//imshow("Stitch", outputImage);
+	//waitKey(0);
 	//std::vector<cv::Point> corners = findTable(image);
 	//if(corners.size() == 4){
 	//	cv::Mat ortho = warpImage(corners, image);
