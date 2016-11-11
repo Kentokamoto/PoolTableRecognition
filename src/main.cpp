@@ -78,7 +78,7 @@ int main(int argv, char* argc[]){
 	list.push_back(left);
 	list.push_back(right);
 	TableStitch tableStitcher;
-	// tableStitcher.compute(left,right);
+	tableStitcher.compute(left,right);
 	// Stitcher stitcher = Stitcher::createDefault();
 	// stitcher.setRegistrationResol(-1); /// 0.6
 	// stitcher.setSeamEstimationResol(-1);   /// 0.1
