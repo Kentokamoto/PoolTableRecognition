@@ -54,7 +54,7 @@ void filterLines(std::vector<Vec2f>& lines, float ThetaTol, float RhoTol){
  	cvtColor(leftHSV,leftGray,CV_BGR2GRAY);
 
  	// Detect Edges
- 	blur(leftGray, leftDetectedEdges, Size(5,5));
+ 	blur(leftGray, leftDetectedEdges, Size(7,7));
  	Mat _img;
  	double otsu_thresh_val = cv::threshold(leftDetectedEdges, _img,
  		0,
@@ -64,6 +64,8 @@ void filterLines(std::vector<Vec2f>& lines, float ThetaTol, float RhoTol){
  	lowThreshold = otsu_thresh_val*0.5;
  	highThreshold = otsu_thresh_val;
  	Canny(leftDetectedEdges, leftDetectedEdges, lowThreshold, highThreshold, kernelSize);
+  Mat element = Mat();
+  dilate(leftDetectedEdges, leftDetectedEdges, element);
  	Mat cdst = leftGray;
   #if 0
  	std::vector<Vec2f> lines;
@@ -88,6 +90,7 @@ void filterLines(std::vector<Vec2f>& lines, float ThetaTol, float RhoTol){
  		line( cdst, pt1, pt2, Scalar(0,0,255), 1, CV_AA);
  	}
   #else
+  // Dilate the imaage if possible.
   std::vector<Vec4i> linesP;
   cvtColor(leftDetectedEdges, cdst, CV_GRAY2BGR);
   HoughLinesP( leftDetectedEdges, linesP, 1, CV_PI/180, 60, 150, 50 );

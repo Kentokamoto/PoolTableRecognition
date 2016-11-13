@@ -71,9 +71,12 @@ int main(int argv, char* argc[]){
 
 	// }
 #else
-
-	Mat left = cv::imread("./src/Photos/TableHalf/3/IMG_0234.jpg");
-	Mat right = cv::imread("./src/Photos/TableHalf/3/IMG_0235.jpg");
+	if(argv != 3){
+		cerr << "Error: Input must be ./PoolTable <leftImageFile> <rightImagePath>" << endl;
+		return 0;
+	}
+	Mat left = cv::imread(argc[1]);
+	Mat right = cv::imread(argc[2]);
 	std::vector<Mat> list;
 	list.push_back(left);
 	list.push_back(right);

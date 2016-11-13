@@ -33,8 +33,15 @@ bin/%.o: src/%.cpp
 #	$(CC) $(OBJS) $(CFLAGS) -o cv $(LDFLAGS) $(CPPFLAGS) $(LDLIBS)
 #file2_exe: $(OBJS) $(HDRS)
 #	$(CC) $(PKG) $(OBJS) $(CPPFlags) -o cv $(LDFLAGS)
-test: $(NAME)
-	        ./$(NAME)
+
+test1: $(NAME)
+	./$(NAME) src/Photos/TableHalf/3/IMG_0234.jpg src/Photos/TableHalf/3/IMG_0235.jpg
+
+test2: $(NAME)
+	./$(NAME) src/Photos/TableHalf/4/IMG_0236.jpg src/Photos/TableHalf/4/IMG_0237.jpg
+
+test3: $(NAME)
+	./$(NAME) src/Photos/TableHalf/5/IMG_0238.jpg src/Photos/TableHalf/5/IMG_0239.jpg
 
 clean:
 		rm -rf $(NAME)* bin/
