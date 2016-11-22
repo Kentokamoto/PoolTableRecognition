@@ -35,7 +35,7 @@ bin/%.o: src/%.cpp
 #	$(CC) $(PKG) $(OBJS) $(CPPFlags) -o cv $(LDFLAGS)
 
 test1: $(NAME)
-	./$(NAME) src/Photos/TableHalf/3/IMG_0234.jpg src/Photos/TableHalf/3/IMG_0235.jpg
+	./$(NAME) src/Photos/TableHalf/1/IMG_0227.jpg src/Photos/TableHalf/1/IMG_0228.jpg
 
 test2: $(NAME)
 	./$(NAME) src/Photos/TableHalf/4/IMG_0236.jpg src/Photos/TableHalf/4/IMG_0237.jpg

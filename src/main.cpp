@@ -21,13 +21,26 @@ int main(int argv, char* argc[]){
 
 	printf("Hit ESC key to quit\n");
 #if USEVIDEO
-	// cv::VideoCapture cap("./src/Photos/NewScan/File_009.mp4");//1285 or 1367
-	// //cv::VideoCapture cap(0);
-	// if (!cap.isOpened()) {          // check if we succeeded
-	// 	printf("error - can't open the video file; hit enter key to quit\n");
-	// 	cin.ignore().get();
-	// 	return EXIT_FAILURE;
-	// }
+	 cv::VideoCapture cap("./src/Photos/TableHalf/MovieScan.mp4");//1285 or 1367
+	 //cv::VideoCapture cap(0);
+	 if (!cap.isOpened()) {          // check if we succeeded
+	 	printf("error - can't open the video file; hit enter key to quit\n");
+	 	cin.ignore().get();
+	 	return EXIT_FAILURE;
+	 }
+	 Mat src;
+	 cap >> src;
+	VideoWriter writer;
+	int codec = cap.get(CV_CAP_PROP_FOURCC);
+    int fps = cap.get(CV_CAP_PROP_FPS);
+    string filename = "live.mp4";             // name of the output video file
+    writer.open(filename, codec, fps, src.size(), true);
+    // check if we succeeded
+    if (!writer.isOpened()) {
+        cerr << "Could not open the output video file for write\n";
+        return -1;
+    }
+
 	// Stitch stitch;
 	// cv::Mat outputImage = stitch.stitchImages(cap);
 	// if(outputImage.empty()){
@@ -48,21 +61,22 @@ int main(int argv, char* argc[]){
 	// 				exit(EXIT_FAILURE);
 	// 		}
 	// }
-	// while (true){
-	// 	// Read in the image
-	// 	cv::Mat imageInput;
-	// 	cap >> imageInput;
-	// 	if (imageInput.empty()) break;
+	 while (true){
+	 	// Read in the image
+	 	cv::Mat imageInput;
+	 	cap >> imageInput;
+	 	if (imageInput.empty()) break;
 
-	// 	// Resize the image and put it in outputImage
-	// 	cv::Mat outputImage;
-	// 	cv::resize(imageInput, outputImage, cv::Size(imageInput.cols, imageInput.rows));	
-	// 	std::vector<cv::Point> corn
-	ers = findTable(outputImage);
+	 	// Resize the image and put it in outputImage
+	 	TableStitch tableStitcher;
+	tableStitcher.compute(imageInput);
+	cv::Mat outputImage = tableStitcher.getStitchedTable();
+	writer.write( outputImage);
+	// 	std::vector<cv::Point> corners = findTable(outputImage);
 	// 	if(corners.size() == 4){
 	// 		cv::Mat ortho = warpImage(corners, outputImage);
 	// 		findBalls(ortho);
-	// 	}
+		}
 		
 
 	// 	//cv::namedWindow("My Image", cv::WINDOW_NORMAL);
@@ -81,7 +95,7 @@ int main(int argv, char* argc[]){
 	list.push_back(left);
 	list.push_back(right);
 	TableStitch tableStitcher;
-	tableStitcher.compute(left,right);
+	tableStitcher.compute(left);
 	// Stitcher stitcher = Stitcher::createDefault();
 	// stitcher.setRegistrationResol(-1); /// 0.6
 	// stitcher.setSeamEstimationResol(-1);   /// 0.1

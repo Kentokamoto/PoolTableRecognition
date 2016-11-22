@@ -39,22 +39,28 @@ void filterLines(std::vector<Vec2f>& lines, float ThetaTol, float RhoTol){
       lines.erase(lines.begin() + i+1);
     }
   }
+}
+vector<Vec2f> getEdgeCoords(Mat& input){
+  for(int i = 0; i < input.)
 
 }
- void TableStitch::compute(Mat left, Mat right){
- 	std::cout << "GrayImages" << std::endl;
+
+ void TableStitch::compute(Mat left){
+ 	//std::cout << "GrayImages" << std::endl;
  	Mat leftGray, leftHSV, rightGray, rightHSV;
  	Mat leftDetectedEdges, rightDetectedEdges;
  	double lowThreshold=50;
  	double highThreshold=150;
  	int kernelSize = 3;
 
+  // Detect Edges
+  //blur(left, left, Size(5,5));
  	// Convert to HSV Gray Images
  	cvtColor(left, leftHSV,CV_BGR2HSV);
  	cvtColor(leftHSV,leftGray,CV_BGR2GRAY);
-
+  //leftDetectedEdges = leftGray;
  	// Detect Edges
- 	blur(leftGray, leftDetectedEdges, Size(7,7));
+ 	blur(leftGray, leftDetectedEdges, Size(5,5));
  	Mat _img;
  	double otsu_thresh_val = cv::threshold(leftDetectedEdges, _img,
  		0,
@@ -64,14 +70,17 @@ void filterLines(std::vector<Vec2f>& lines, float ThetaTol, float RhoTol){
  	lowThreshold = otsu_thresh_val*0.5;
  	highThreshold = otsu_thresh_val;
  	Canny(leftDetectedEdges, leftDetectedEdges, lowThreshold, highThreshold, kernelSize);
-  Mat element = Mat();
-  dilate(leftDetectedEdges, leftDetectedEdges, element);
- 	Mat cdst = leftGray;
-  #if 0
+  Mat element = getStructuringElement( MORPH_ELLIPSE,
+                                       Size( 2*2 + 1, 2*2 ),
+                                       Point( 2, 2 ) );
+  //dilate(leftDetectedEdges, leftDetectedEdges, element);
+  //erode(leftDetectedEdges, leftDetectedEdges, element);
+ 	Mat cdst = leftDetectedEdges;
+  #if 1
  	std::vector<Vec2f> lines;
  	HoughLines(leftDetectedEdges, lines,1,CV_PI/180, 200,0,0);
-  //sort(lines.begin(), lines.end(), sortByTheta);
- 	sort(lines.begin(), lines.end(), sortByRho);
+  sort(lines.begin(), lines.end(), sortByTheta);
+ 	//sort(lines.begin(), lines.end(), sortByRho);
 
   filterLines(lines, 4, 20);
  	cvtColor(cdst, cdst, CV_GRAY2BGR);
@@ -87,17 +96,20 @@ void filterLines(std::vector<Vec2f>& lines, float ThetaTol, float RhoTol){
  		pt1.y = cvRound(y0 + 10000*(a));
  		pt2.x = cvRound(x0 - 10000*(-b));
  		pt2.y = cvRound(y0 - 10000*(a));
- 		line( cdst, pt1, pt2, Scalar(0,0,255), 1, CV_AA);
+ 		line( cdst, pt1, pt2, Scalar(0,255,0), 1, CV_AA);
  	}
   #else
   // Dilate the imaage if possible.
+  dilate(leftDetectedEdges, leftDetectedEdges, element);
   std::vector<Vec4i> linesP;
   cvtColor(leftDetectedEdges, cdst, CV_GRAY2BGR);
-  HoughLinesP( leftDetectedEdges, linesP, 1, CV_PI/180, 60, 150, 50 );
-  std::cout << linesP.size() << std::endl;
+  //cdst = left;
+  HoughLinesP( leftDetectedEdges, linesP, 1,CV_PI/180, 80, 150, 50 );
+  //std::cout << linesP.size() << std::endl;
   for( size_t i = 0; i < linesP.size(); i++ ){
         line( cdst, Point(linesP[i][0], linesP[i][1]),
-            Point(linesP[i][2], linesP[i][3]), Scalar(0,0,255), 2, 8 );
+            Point(linesP[i][2], linesP[i][3]), Scalar(0,0,255), 1, 8 );
+        circle(cdst, Point(linesP[i][0],linesP[i][1]), 5, Scalar(0,255,0));     
   }
 #endif
 
@@ -127,7 +139,9 @@ void filterLines(std::vector<Vec2f>& lines, float ThetaTol, float RhoTol){
  		compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
  		compression_params.push_back(9);
  		imwrite("Output.png", cdst,compression_params );
+    namedWindow("Output", CV_WINDOW_NORMAL);
+    stitchedTable = cdst;
     //imshow("Output" ,cdst);
-    //waitKey(0);
+    //1waitKey(0);
  	}
 

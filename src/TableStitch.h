@@ -18,7 +18,7 @@ class TableStitch{
 		Mat getStitchedTable();
 		void setStitchedTable(Mat input);
 		//void findBalls(Mat src);
-		void compute(Mat left, Mat right);
+		void compute(Mat left);
 
 
 };
