@@ -2,6 +2,7 @@
 
 const double M_PI2DEG = 180/3.14159;
 using namespace cv;
+using namespace std;
 TableStitch::TableStitch(){
 
 
@@ -40,10 +41,37 @@ void filterLines(std::vector<Vec2f>& lines, float ThetaTol, float RhoTol){
     }
   }
 }
-vector<Vec2f> getEdgeCoords(Mat& input){
-  for(int i = 0; i < input.)
-
+vector<Vec2f> TableStitch::getEdgeCoords(Mat& input){
+  vector<Vec2f> output;
+  for(int i = 0; i < input.rows; i++){
+    for(int j = 0; j < input.cols; j++){
+      if( input.at<uchar>(i,j) > 0){
+        output.push_back(Vec2f(i,j));
+      }
+    }
+  }
+  return output;
 }
+
+
+void TableStitch::organizeLinesAndEdges(vector<Vec2f> edges, vector<Vec2f> lines, float accTol){
+   for(int i = 0; i < edges.size(); i++){
+     for(auto line : lines){
+       float rho = line[0], theta = line[1];
+       float output = (float)edges[i][0]*cos(theta) + (float)edges[i][1]*sin(theta);
+       if(abs(output-rho) < accTol){
+         if(matchingEdges.find(make_pair(line[0], line[1])) != matchingEdges.end()){ // In Map
+          matchingEdges[make_pair(line[0], line[1])].push_back(edges[i]);
+         }else{
+          std::vector<Vec2f> v;
+          v.push_back(edges[i]);
+          matchingEdges[make_pair(line[0], line[1])] = v;
+         }
+       }
+     }
+   }
+}
+
 
  void TableStitch::compute(Mat left){
  	//std::cout << "GrayImages" << std::endl;
@@ -55,12 +83,12 @@ vector<Vec2f> getEdgeCoords(Mat& input){
 
   // Detect Edges
   //blur(left, left, Size(5,5));
- 	// Convert to HSV Gray Images
+ 	// Convert to HSV Gray Images 
  	cvtColor(left, leftHSV,CV_BGR2HSV);
  	cvtColor(leftHSV,leftGray,CV_BGR2GRAY);
   //leftDetectedEdges = leftGray;
  	// Detect Edges
- 	blur(leftGray, leftDetectedEdges, Size(5,5));
+ 	blur(leftGray, leftDetectedEdges, Size(9,9));
  	Mat _img;
  	double otsu_thresh_val = cv::threshold(leftDetectedEdges, _img,
  		0,
@@ -71,18 +99,29 @@ vector<Vec2f> getEdgeCoords(Mat& input){
  	highThreshold = otsu_thresh_val;
  	Canny(leftDetectedEdges, leftDetectedEdges, lowThreshold, highThreshold, kernelSize);
   Mat element = getStructuringElement( MORPH_ELLIPSE,
-                                       Size( 2*2 + 1, 2*2 ),
-                                       Point( 2, 2 ) );
-  //dilate(leftDetectedEdges, leftDetectedEdges, element);
+                                       Size( 2*1 + 1, 2*1 ),
+                                       Point( 1, 1 ) );
+  dilate(leftDetectedEdges, leftDetectedEdges, element);
   //erode(leftDetectedEdges, leftDetectedEdges, element);
  	Mat cdst = leftDetectedEdges;
   #if 1
  	std::vector<Vec2f> lines;
- 	HoughLines(leftDetectedEdges, lines,1,CV_PI/180, 200,0,0);
+ 	HoughLines(leftDetectedEdges, lines,1,CV_PI/180, 500,0,0);
   sort(lines.begin(), lines.end(), sortByTheta);
  	//sort(lines.begin(), lines.end(), sortByRho);
 
   filterLines(lines, 4, 20);
+  vector<Vec2f> edges = getEdgeCoords(leftDetectedEdges);
+  std::cout << edges.size() << std::endl;
+  std::cout << lines.size() << std::endl;
+
+  organizeLinesAndEdges(edges, lines, 10);
+  cout << matchingEdges.size() << endl;
+  cout << "Sizes" << endl;
+  for(auto& point: matchingEdges){
+    cout << point.second.size() << endl;
+  }
+  
  	cvtColor(cdst, cdst, CV_GRAY2BGR);
  	for( size_t i = 0; i < lines.size(); i++ ){
  		float rho = lines[i][0], theta = lines[i][1];
