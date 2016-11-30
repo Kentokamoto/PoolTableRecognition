@@ -24,8 +24,9 @@ TableStitch::TableStitch(){
   	stitchedTable = input;
   }
 
+
 /*
- * Other Methods 
+ * Sorting Methods
  */
 bool sortByRho(Vec2f a, Vec2f b){
     return a[0] > b[0];
@@ -34,6 +35,17 @@ bool sortByRho(Vec2f a, Vec2f b){
 bool sortByTheta(Vec2f a, Vec2f b){
     return a[1] > b[1];
 }
+
+bool sortByDistance(Point2i a, Point2i b){
+  float aSqr = sqrt(a.x*a.x + a.y*a.y);
+  float bSqr = sqrt(b.x*b.x + b.y*b.y);
+  return aSqr > bSqr;
+}
+
+
+/*
+ * Other Methods 
+ */
 void filterLines(std::vector<Vec2f>& lines, float ThetaTol, float RhoTol){
   for(int i = lines.size()-2; i >= 0; i--){
     if((abs(lines[i+1][0] - lines[i][0]) <= RhoTol) && (abs(lines[i+1][1] - lines[i][1]) <= ThetaTol)){
@@ -54,16 +66,16 @@ vector<Vec2f> TableStitch::getEdgeCoords(Mat& input){
 }
 
 
-void TableStitch::organizeLinesAndEdges(vector<Vec2f> edges, vector<Vec2f> lines, float accTol){
+void TableStitch::organizeLinesAndEdges(vector<Point2i> edges, vector<Vec2f> lines, float accTol){
    for(int i = 0; i < edges.size(); i++){
      for(auto line : lines){
        float rho = line[0], theta = line[1];
-       float output = (float)edges[i][0]*cos(theta) + (float)edges[i][1]*sin(theta);
+       float output = (float)edges[i].x*cos(theta) + (float)edges[i].y*sin(theta);
        if(abs(output-rho) < accTol){
          if(matchingEdges.find(make_pair(line[0], line[1])) != matchingEdges.end()){ // In Map
           matchingEdges[make_pair(line[0], line[1])].push_back(edges[i]);
          }else{
-          std::vector<Vec2f> v;
+          std::vector<Point2i> v;
           v.push_back(edges[i]);
           matchingEdges[make_pair(line[0], line[1])] = v;
          }
@@ -88,7 +100,7 @@ void TableStitch::organizeLinesAndEdges(vector<Vec2f> edges, vector<Vec2f> lines
  	cvtColor(leftHSV,leftGray,CV_BGR2GRAY);
   //leftDetectedEdges = leftGray;
  	// Detect Edges
- 	blur(leftGray, leftDetectedEdges, Size(9,9));
+ 	blur(leftGray, leftDetectedEdges, Size(7,7));
  	Mat _img;
  	double otsu_thresh_val = cv::threshold(leftDetectedEdges, _img,
  		0,
@@ -106,23 +118,32 @@ void TableStitch::organizeLinesAndEdges(vector<Vec2f> edges, vector<Vec2f> lines
  	Mat cdst = leftDetectedEdges;
   #if 1
  	std::vector<Vec2f> lines;
- 	HoughLines(leftDetectedEdges, lines,1,CV_PI/180, 500,0,0);
+ 	HoughLines(leftDetectedEdges, lines,1,CV_PI/180, 400,0,0);
   sort(lines.begin(), lines.end(), sortByTheta);
  	//sort(lines.begin(), lines.end(), sortByRho);
 
   filterLines(lines, 4, 20);
-  vector<Vec2f> edges = getEdgeCoords(leftDetectedEdges);
-  std::cout << edges.size() << std::endl;
+  //vector<Vec2f> edges = getEdgeCoords(leftDetectedEdges);
+  std::vector<cv::Point2i>  locations;   // output, locations of non-zero pixels 
+  cv::findNonZero(leftDetectedEdges, locations);
+  std::cout << locations.size() << std::endl;
   std::cout << lines.size() << std::endl;
 
-  organizeLinesAndEdges(edges, lines, 10);
+  organizeLinesAndEdges(locations, lines, 10);
   cout << matchingEdges.size() << endl;
   cout << "Sizes" << endl;
+  cvtColor(cdst, cdst, CV_GRAY2BGR);
   for(auto& point: matchingEdges){
+    sort(point.second.begin(), point.second.end(), sortByDistance);
     cout << point.second.size() << endl;
+    for(auto& linePoints : point.second){
+      //cout << linePoints[1] << " " << linePoints[0] << endl;
+      circle(cdst, linePoints, 1, Scalar(0,255,0));  
+    }
+    //line( cdst, point.second[0],point.second[point.second.size()-1], Scalar(0,0,255), 1, 8 );
   }
   
- 	cvtColor(cdst, cdst, CV_GRAY2BGR);
+ 	
  	for( size_t i = 0; i < lines.size(); i++ ){
  		float rho = lines[i][0], theta = lines[i][1];
  		Point pt1, pt2;
@@ -135,7 +156,7 @@ void TableStitch::organizeLinesAndEdges(vector<Vec2f> edges, vector<Vec2f> lines
  		pt1.y = cvRound(y0 + 10000*(a));
  		pt2.x = cvRound(x0 - 10000*(-b));
  		pt2.y = cvRound(y0 - 10000*(a));
- 		line( cdst, pt1, pt2, Scalar(0,255,0), 1, CV_AA);
+ 		line( cdst, pt1, pt2, Scalar(255,0,255), 1, CV_AA);
  	}
   #else
   // Dilate the imaage if possible.
