@@ -95,6 +95,7 @@ int main(int argv, char* argc[]){
 	list.push_back(left);
 	list.push_back(right);
 	TableStitch tableStitcher;
+	cv::resize(left, left, cv::Size(left.cols/2, left.rows/2));
 	tableStitcher.compute(left);
 	// Stitcher stitcher = Stitcher::createDefault();
 	// stitcher.setRegistrationResol(-1); /// 0.6

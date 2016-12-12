@@ -14,14 +14,17 @@ using namespace cv;
 class TableStitch{
 	Mat stitchedTable;
 	std::map<std::pair<float, float> , std::vector<Point2i> > matchingEdges;
+
 	public:
 		TableStitch();
 		Mat getStitchedTable();
 		void setStitchedTable(Mat input);
 		//void findBalls(Mat src);
-		void compute(Mat left);
+		void compute(Mat image);
 		void organizeLinesAndEdges(std::vector<Point2i> edges, std::vector<Vec2f> lines, float accTol);
 		std::vector<Vec2f> getEdgeCoords(Mat& input);
+		std::vector<Vec2f> findCorrectLines(Mat image, std::vector<Vec2f> houghLines,float rhoOffset, float colorTol);
+		std::vector<Point2i> getPockets(Mat image, float gapTol);
 };
 
 
