@@ -322,7 +322,7 @@ void TableStitch::compute(Mat image){
   //sort(lines.begin(), lines.end(), sortByRho);
   sort(lines.begin(), lines.end(), sortByTheta);
   // Run some tests to see which lines are true to the rail and the cushion of the image.
-  vector<Vec2f> correctLines = findCorrectLines(image,lines,5.0, 25.0);
+  vector<Vec2f> correctLines = findCorrectLines(image,lines,5.0, 20.0);
   // Filter extra noise from the lines so hough lines that appear to be very similar with 
   // slightly different thetas or rhos are ignored. 
   filterLines(correctLines, 4, 20);
