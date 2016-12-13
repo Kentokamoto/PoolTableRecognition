@@ -43,5 +43,8 @@ test2: $(NAME)
 test3: $(NAME)
 	./$(NAME) src/Photos/TableHalf/5/IMG_0238.jpg src/Photos/TableHalf/5/IMG_0239.jpg
 
+test4: $(NAME)
+	./$(NAME) src/Photos/TableHalf/3/IMG_0234.jpg src/Photos/TableHalf/3/IMG_0235.jpg
+
 clean:
 		rm -rf $(NAME)* bin/

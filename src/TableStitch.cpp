@@ -286,7 +286,10 @@ vector<Vec2f> TableStitch::findCorrectLines(Mat image, vector<Vec2f> houghLines,
   if(foundLinesH.size() >= 2){
     correctLines.push_back(foundLinesH[0].houghLine);
     correctLines.push_back(foundLinesH[1].houghLine);
+  }else if(foundLinesH.size() == 1){
+    correctLines.push_back(foundLinesH[0].houghLine);
   }
+
   if(foundLinesV.empty()== false){
     correctLines.push_back(foundLinesV[0].houghLine);
   }
@@ -295,7 +298,7 @@ vector<Vec2f> TableStitch::findCorrectLines(Mat image, vector<Vec2f> houghLines,
 }
 
 /*
- * 
+ * Main Program
  */
 void TableStitch::compute(Mat image){
   //Create a window for User interaction
@@ -367,7 +370,7 @@ void TableStitch::compute(Mat image){
   cv::findNonZero(detectedEdges, locations);
   std::cout << locations.size() << std::endl;
   std::cout << lines.size() << std::endl;
-  organizeLinesAndEdges(locations, correctLines, 3);
+  organizeLinesAndEdges(locations, correctLines, 4);
 
   // Draw the lines that line up
   cvtColor(cdst, cdst, CV_GRAY2BGR);
@@ -395,6 +398,20 @@ void TableStitch::compute(Mat image){
    pt2.y = cvRound(y0 - 10000*(a));
    line( cdst, pt1, pt2, Scalar(255,0,255), 1, CV_AA);
  }
+
+ //   for( size_t i = 0; i < lines.size(); i++ ){
+ //   float rho = lines[i][0], theta = lines[i][1];
+ //   Point pt1, pt2;
+ //   double a = cos(theta), b = sin(theta);
+ //   double x0 = a*rho, y0 = b*rho;
+
+
+ //   pt1.x = cvRound(x0 + 10000*(-b));
+ //   pt1.y = cvRound(y0 + 10000*(a));
+ //   pt2.x = cvRound(x0 - 10000*(-b));
+ //   pt2.y = cvRound(y0 - 10000*(a));
+ //   line( cdst, pt1, pt2, Scalar(255,0,0), 1, CV_AA);
+ // }
  // Use Probabalistic Hough Lines
   #else
   // Dilate the imaage if possible.
