@@ -29,6 +29,21 @@ void TableStitch::setStitchedTable(Mat input){
  stitchedTable = input;
 }
 
+/*
+ * Structures
+ */
+struct lineInfo {
+  Vec2f houghLine;
+  int hit;
+  int miss;
+
+  lineInfo(Vec2f line, int hit, int miss){
+    this->houghLine = line;
+    this->hit = hit;
+    this->miss = miss;
+  }
+};
+
 
 /*
  * Sorting Methods
@@ -41,10 +56,8 @@ bool sortByTheta(Vec2f a, Vec2f b){
   return a[1] > b[1];
 }
 
-bool sortByDistance(Point2i a, Point2i b){
-  float aSqr = sqrt(a.x*a.x + a.y*a.y);
-  float bSqr = sqrt(b.x*b.x + b.y*b.y);
-  return aSqr > bSqr;
+bool sortByHitMiss(lineInfo a, lineInfo b){
+  return ((float)a.hit/(float)a.miss) > ((float)b.hit/(float)b.miss);
 }
 bool sortByX(Point2i a, Point2i b){
   return a.x > b.x;
@@ -191,7 +204,7 @@ vector<Point2i> TableStitch::getPockets(Mat image, float gapTol){
  * Callback Function used for selecting points on an image
  */
 void CallBackFunc(int event, int x, int y, int flags, void* userdata){
-  if  ( event == EVENT_LBUTTONDOWN && flags == ( EVENT_FLAG_SHIFTKEY + EVENT_FLAG_LBUTTON)){
+  if  (event == EVENT_MBUTTONDOWN){
     cout << "Setting Edge color at clicked - position (" << x << ", " << y << ")" << endl;
     edgeColorLoc = Point2i(x,y);
   }
@@ -213,8 +226,12 @@ bool colorIsSimilar(Vec3b color1, Vec3b color2, float tolerance){
 }
 return false;
 }
+
+
 vector<Vec2f> TableStitch::findCorrectLines(Mat image, vector<Vec2f> houghLines,float rhoOffset, float colorTol){
   vector<Vec2f> correctLines;
+  vector<lineInfo> foundLinesV, foundLinesH;
+
   // Retrieve the RGB colors for the manually selected bumper and wood rail
   Vec3b bumperColor = image.at<Vec3b>(bumperColorLoc.y, bumperColorLoc.x);
   Vec3b edgeColor = image.at<Vec3b>(edgeColorLoc.y, edgeColorLoc.x);
@@ -230,7 +247,7 @@ vector<Vec2f> TableStitch::findCorrectLines(Mat image, vector<Vec2f> houghLines,
 
     int hit = 0;
     int miss = 0;
-    for (int x = 0; x < image.cols; x+= 30){
+    for (int x = 0; x < image.cols; x+= 40){
 
       int y1 = cvRound(rho1/sin(theta) - x*cos(theta)/sin(theta));
       int y2 = cvRound(rho2/sin(theta) - x*cos(theta)/sin(theta));
@@ -257,9 +274,23 @@ vector<Vec2f> TableStitch::findCorrectLines(Mat image, vector<Vec2f> houghLines,
     cout << " Hit: " << hit << " Miss: " << miss << endl;
     if((float)hit/(float)(miss)> 0.1){
       cout << "Found" << endl;
-      correctLines.push_back(line);
+      if(theta*M_PI2DEG > 45 && theta*M_PI2DEG < 135){
+        foundLinesH.push_back(lineInfo(line,hit,miss));
+      }else{
+        foundLinesV.push_back(lineInfo(line,hit,miss));
+      }
     }
   }
+  sort(foundLinesV.begin(), foundLinesV.end(), sortByHitMiss);
+  sort(foundLinesH.begin(), foundLinesH.end(), sortByHitMiss);
+  if(foundLinesH.size() >= 2){
+    correctLines.push_back(foundLinesH[0].houghLine);
+    correctLines.push_back(foundLinesH[1].houghLine);
+  }
+  if(foundLinesV.empty()== false){
+    correctLines.push_back(foundLinesV[0].houghLine);
+  }
+
   return correctLines;
 }
 
@@ -273,12 +304,13 @@ void TableStitch::compute(Mat image){
   setMouseCallback("My Window", CallBackFunc, NULL);
   cout << "Press left mouse button when selecting center table color: " << endl;
   cout << "Press right mouse button when selecting bumper color: " << endl;
-  cout << "Press left mouse while holding shift key when selecting the table edge color: " << endl;
+  cout << "Press middle mouse button when selecting the table edge color: " << endl;
   //show the image
   while(true){
     imshow("My Window", image);
     // Wait until user press some key
-    if(waitKey(0) == 27){
+    char key = waitKey(0) ;
+    if(key == 'q'){
       break;
     }
   }
@@ -319,21 +351,23 @@ void TableStitch::compute(Mat image){
   #if 1
   std::vector<Vec2f> lines;
   HoughLines(detectedEdges, lines,1,CV_PI/180, 300,0,0);
-  //sort(lines.begin(), lines.end(), sortByRho);
   sort(lines.begin(), lines.end(), sortByTheta);
   // Run some tests to see which lines are true to the rail and the cushion of the image.
   vector<Vec2f> correctLines = findCorrectLines(image,lines,5.0, 20.0);
   // Filter extra noise from the lines so hough lines that appear to be very similar with 
   // slightly different thetas or rhos are ignored. 
-  filterLines(correctLines, 4, 20);
-
+  
+  sort(correctLines.begin(), correctLines.end(), sortByRho);
+  //filterLines(correctLines, 4, 20);
+  //sort(correctLines.begin(), correctLines.end(), sortByTheta);
+  //filterLines(correctLines, 4, 20);
 
   // Organize the lines so only we know which edges line up with the hough lines
   std::vector<cv::Point2i>  locations;   // output, locations of non-zero pixels 
   cv::findNonZero(detectedEdges, locations);
   std::cout << locations.size() << std::endl;
   std::cout << lines.size() << std::endl;
-  organizeLinesAndEdges(locations, correctLines, 2);
+  organizeLinesAndEdges(locations, correctLines, 3);
 
   // Draw the lines that line up
   cvtColor(cdst, cdst, CV_GRAY2BGR);
@@ -379,6 +413,7 @@ void TableStitch::compute(Mat image){
 
 	// Detect Pockets
  vector<Point2i> pockets = getPockets(image, 40.0);
+ cout << pockets.size() << endl;
  for(auto& pocket : pockets){
   circle(cdst, pocket, 10, Scalar(0,0,255));  
 }
