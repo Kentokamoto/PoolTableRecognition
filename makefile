@@ -66,5 +66,9 @@ test10: $(NAME)
 
 test11: $(NAME)
 	./$(NAME) src/Photos/TableHalf/9/IMG_1.jpg src/Photos/TableHalf/9/IMG_2.jpg
+
+test12: $(NAME)
+	./$(NAME) src/Photos/TableHalf/10/IMG_1.jpg src/Photos/TableHalf/10/IMG_2.jpg
+
 clean:
 		rm -rf $(NAME)* bin/

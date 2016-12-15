@@ -120,18 +120,18 @@ int main(int argv, char* argc[]){
 
     }
 
-    // if(rightPockets.size() == 4 && leftPockets.size() == 4){
-    // 	Mat output, orthoLeft, orthoRight;
-    // 	orthoLeft = tableStitcher.warpImage(left, leftPockets);
-    // 	orthoRight = tableStitcher.warpImage(right, rightPockets);
-    // 	output = tableStitcher.combineImages(left, right);
+    if(rightPockets.size() == 4 && leftPockets.size() == 4){
+    	Mat output, orthoLeft, orthoRight;
+    	orthoLeft = tableStitcher.warpImage(left, leftPockets);
+    	orthoRight = tableStitcher.warpImage(right, rightPockets);
+    	output = tableStitcher.combineImages(orthoLeft, orthoRight);
 
-    // 	std::vector<int> compression_params;
-    // 	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-    // 	compression_params.push_back(9);
-    // 	imwrite("Stitched.png", output,compression_params );
+    	std::vector<int> compression_params;
+    	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+    	compression_params.push_back(9);
+    	imwrite("Stitched.png", output,compression_params );
 
-    // }
+    }
 	// Stitcher stitcher = Stitcher::createDefault();
 	// stitcher.setRegistrationResol(-1); /// 0.6
 	// stitcher.setSeamEstimationResol(-1);   /// 0.1

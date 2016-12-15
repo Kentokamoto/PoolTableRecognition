@@ -62,6 +62,11 @@ bool sortByHitMiss(lineInfo a, lineInfo b){
 bool sortByX(Point2i a, Point2i b){
   return a.x > b.x;
 }
+
+bool sortByXNeg(Point2i a, Point2i b){
+  return a.x < b.x;
+}
+
 bool sortByY(Point2i a, Point2i b){
   return a.y > b.y;
 }
@@ -213,19 +218,26 @@ vector<Point2i> TableStitch::getPockets(Mat image, float gapTol){
       pockets.push_back(getIntersection(point.first, line2));
     }
   }
+
+  if(pockets.empty()){
+    return pockets;
+  }
   int start , end;
-  if(pockets[0].x > image.cols/2){
+  cout << pockets[0].x  << " " << image.cols/2 << endl;
+  if(pockets[0].x < image.cols/2){
     // We are looking at the left half of the pool table
+    cout << "Left" << endl;
     start = image.cols/2;
   }else{
     // We are looking at the right half of the table
+    cout << "Right" << endl;
     start = 0;
   }
 
 
   for(int i = 0; i < points1.size()-1; i++){
     if(points1[i].x > start){
-      if((points1[i-1].x - points1[i].x) > gapTol){
+      if(abs(points1[i-1].x - points1[i].x) > gapTol){
         float theta = get<1>(line1);
         float rho = get<0>(line1);
         float m1 = -cos(theta)/sin(theta);
@@ -241,7 +253,7 @@ vector<Point2i> TableStitch::getPockets(Mat image, float gapTol){
   }
   for(int i = 0; i < points2.size()-1; i++){
     if(points2[i].x > start){
-      if((points2[i-1].x - points2[i].x) > gapTol){
+      if(abs(points2[i-1].x - points2[i].x) > gapTol){
         float theta = get<1>(line2);
         float rho = get<0>(line2);
         float m1 = -cos(theta)/sin(theta);
@@ -425,7 +437,7 @@ vector<Point2i> TableStitch::compute(Mat image){
   HoughLines(detectedEdges, lines,1,CV_PI/180, 300,0,0);
   sort(lines.begin(), lines.end(), sortByTheta);
   // Run some tests to see which lines are true to the rail and the cushion of the image.
-  vector<Vec2f> correctLines = findCorrectLines(image,lines,5.0, 20.0);
+  vector<Vec2f> correctLines = findCorrectLines(image,lines,5.0, 30.0);
   // Filter extra noise from the lines so hough lines that appear to be very similar with 
   // slightly different thetas or rhos are ignored. 
   
@@ -444,7 +456,7 @@ vector<Point2i> TableStitch::compute(Mat image){
   // Draw the lines that line up
   cvtColor(cdst, cdst, CV_GRAY2BGR);
   for(auto& point: matchingEdges){
-    sort(point.second.begin(), point.second.end(), sortByX);
+    sort(point.second.begin(), point.second.end(), sortByXNeg);
     cout << point.second.size() << endl;
     for(auto& linePoints : point.second){
       circle(cdst, linePoints, 1, Scalar(0,255,0));  
@@ -498,7 +510,7 @@ vector<Point2i> TableStitch::compute(Mat image){
   compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
   compression_params.push_back(9);
   imwrite("Output.png", cdst,compression_params );
-  namedWindow("Output", CV_WINDOW_NORMAL);
+  //namedWindow("Output", CV_WINDOW_NORMAL);
   stitchedTable = cdst;
 
   return pockets;
