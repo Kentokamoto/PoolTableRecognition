@@ -22,10 +22,7 @@ vector<size_t> sort_indexes(const vector<T> &v) {
 	return idx;
 }
 
-Mat warpImage(vector<Point>& corners, Mat src){
-	Point2f srcTri[3];
-	Point2f dstTri[3];
-
+Mat warpImage(vector<Point2i>& corners, Mat src){   
 
 		// Create a list of "ortho" square corner points.
 		// Pool Table is 1:2 ratio.
@@ -34,8 +31,8 @@ Mat warpImage(vector<Point>& corners, Mat src){
 	vector<cv::Point2f> squareOrtho;
 	squareOrtho.push_back(cv::Point2f(0, 0));
 	squareOrtho.push_back(cv::Point2f(0, 500));
-	squareOrtho.push_back(cv::Point2f(1000, 0));
-	squareOrtho.push_back(cv::Point2f(1000, 500));
+	squareOrtho.push_back(cv::Point2f(500, 0));
+	squareOrtho.push_back(cv::Point2f(500, 500));
 
 	// Organize the corner points so we can distinguish long side and short side.
 	vector<Point2f> correctedCorner;

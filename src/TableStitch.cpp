@@ -77,6 +77,14 @@ void filterLines(std::vector<Vec2f>& lines, float ThetaTol, float RhoTol){
     }
   }
 }
+void filterLines(std::vector<lineInfo>& lines, float ThetaTol, float RhoTol){
+  for(int i = lines.size()-2; i >= 0; i--){
+    if((abs(lines[i+1].houghLine[0] - lines[i].houghLine[0]) <= RhoTol)
+     && (abs(lines[i+1].houghLine[1] - lines[i].houghLine[1]) <= ThetaTol)){
+      lines.erase(lines.begin() + i+1);
+  }
+}
+}
 vector<Vec2f> TableStitch::getEdgeCoords(Mat& input){
   vector<Vec2f> output;
   for(int i = 0; i < input.rows; i++){
@@ -127,46 +135,96 @@ Point2i getIntersection(pair<float, float> firstPair, pair<float, float> secondP
   return Point2i(x,y);
 }
 
+Point2i TableStitch::get4thPoint(vector<Point2i> pockets, pair<float, float> line1, pair<float,float> line2){
+  Point2i midPoint = Point2i((pockets[0].x + pockets[1].x)/2,(pockets[0].y + pockets[1].y)/2 );
+  Point2i correctPoint;
+  float theta = get<1>(line1);
+  float rho = get<0>(line1);
+  pair<float, float> baseLine;
+  if(abs(pockets[2].x*cos(theta) + pockets[2].y*sin(theta) - rho) < 0.1){
+    baseLine = line2;
+    correctPoint = pockets[1];
+  }else{
+    baseLine = line1;
+    correctPoint = pockets[0];
+  }
+
+
+  // Get intersection
+  float m1 = ((float)pockets[2].y - (float)midPoint.y)/((float)pockets[2].x-(float)midPoint.x);
+  float b1 = (float)midPoint.y - m1*midPoint.x;
+  float m2 = -cos(get<1>(baseLine))/sin(get<1>(baseLine));
+  float b2 = get<0>(baseLine)/sin(get<1>(baseLine)); 
+
+  cout << m1 << " float " << b1 << endl;
+  int x = cvRound((b2-b1)/(m1-m2));
+  int y = cvRound(m1*x + b1);
+
+  cout << x << " thing " << y << endl;
+  int diffX = cvRound(correctPoint.x - x);
+  int diffY = cvRound(correctPoint.y - y);
+
+  return Point2i(cvRound(correctPoint.x+diffX),cvRound(correctPoint.y+diffY));
+
+}
+
+
 vector<Point2i> TableStitch::getPockets(Mat image, float gapTol){
   vector<Point2i> pockets;
   pair<float, float> line1, line2;
   vector<Point2i> points1, points2;
   // First find the parallel lines
-  map<pair<float, float> , std::vector<Point2i> >::iterator prevIt = matchingEdges.begin();
-  map<pair<float, float> , std::vector<Point2i> >::iterator it = prevIt;
+  map<pair<float, float> , std::vector<Point2i> >::iterator it = matchingEdges.begin();
   for(it ; it!= matchingEdges.end(); it++){
-    if(it != matchingEdges.begin()){
-      cout <<"Points: " <<  get<1>(prevIt->first)*M_PI2DEG <<" " << get<1>(it->first)*M_PI2DEG << endl;
-      if(abs(get<1>(prevIt->first)*M_PI2DEG - get<1>(it->first)*M_PI2DEG) < 5.0){
-        cout << "Found" << endl;
-        line1 = prevIt->first;
-        line2 = it->first;
+    bool found = false;
+    if(next(it,1) == matchingEdges.end()){
+      break;
+    }
+    map<pair<float,float>, std::vector<Point2i> >::iterator nextIt = next(it,1); 
 
-        points1 = prevIt->second;
-        points2 = it->second;
+    for(nextIt; nextIt != matchingEdges.end(); nextIt++){
+
+      cout <<"Points: " <<  get<1>(it->first)*M_PI2DEG <<" " << get<1>(nextIt->first)*M_PI2DEG << endl;
+      if(abs(get<1>(it->first)*M_PI2DEG - get<1>(nextIt->first)*M_PI2DEG) < 5.0){
+        cout << "Found" << endl;
+        line1 = it->first;
+        line2 = nextIt->first;
+        points1 = it->second;
+        points2 = nextIt->second;
+        found = true;
         break;
       }
-      prevIt = it;
+    }
+    if (found){
+      cout << "Found" << endl;
+      break;
     }
   }
-
   // Find intersections
-  cout << get<0>(line1) << " line1 " << get<1>(line1) << endl;
-  cout << get<0>(line2) << " line2 " << get<1>(line2) << endl;
-  if(get<0>(line2) == 0 && get<1>(line2)==0){
+  cout << get<0>(line1) << " line1 " << get<1>(line1)*M_PI2DEG << endl;
+  cout << get<0>(line2) << " line2 " << get<1>(line2)*M_PI2DEG << endl;
+  if(get<0>(line2) == 0 && get<1>(line2)== 0){
     return pockets;
   }
   for(auto& point : matchingEdges){
     if(point.first != line1 && point.first != line2){
-      cout << get<0>(point.first) << " " << get<1>(point.first) << endl;
-      Point2i intersection = getIntersection(point.first, line1);
-      pockets.push_back(intersection);
+      cout << get<0>(point.first) << " " << get<1>(point.first)*M_PI2DEG << endl;
+      pockets.push_back(getIntersection(point.first, line1));
       pockets.push_back(getIntersection(point.first, line2));
     }
   }
+  int start , end;
+  if(pockets[0].x > image.cols/2){
+    // We are looking at the left half of the pool table
+    start = image.cols/2;
+  }else{
+    // We are looking at the right half of the table
+    start = 0;
+  }
+
 
   for(int i = 0; i < points1.size()-1; i++){
-    if(points1[i].x > image.cols/2){
+    if(points1[i].x > start){
       if((points1[i-1].x - points1[i].x) > gapTol){
         float theta = get<1>(line1);
         float rho = get<0>(line1);
@@ -174,6 +232,7 @@ vector<Point2i> TableStitch::getPockets(Mat image, float gapTol){
         float b1 = rho/sin(theta);
         int x = cvRound((points1[i-1].x + points1[i].x)/2);
         int y = cvRound(m1*x + b1);
+        cout << points1[i-1].x << " " << points1[i].x << endl;
         cout << "middle for line 1: "<< x << " " << y << endl;
         pockets.push_back(Point2i(x,y));
         break;
@@ -181,7 +240,7 @@ vector<Point2i> TableStitch::getPockets(Mat image, float gapTol){
     }
   }
   for(int i = 0; i < points2.size()-1; i++){
-    if(points2[i].x > image.cols/2){
+    if(points2[i].x > start){
       if((points2[i-1].x - points2[i].x) > gapTol){
         float theta = get<1>(line2);
         float rho = get<0>(line2);
@@ -196,6 +255,13 @@ vector<Point2i> TableStitch::getPockets(Mat image, float gapTol){
     }
   }
 
+  // if(pockets.size() == 3){
+  //   cout << "Need to find 4th Point" << endl;
+  //   Point2i finalPoint = get4thPoint(pockets, line1, line2);
+  //   cout << finalPoint << endl;
+  //   pockets.push_back(finalPoint);
+  // }
+
   return pockets;
 
 
@@ -204,7 +270,7 @@ vector<Point2i> TableStitch::getPockets(Mat image, float gapTol){
  * Callback Function used for selecting points on an image
  */
 void CallBackFunc(int event, int x, int y, int flags, void* userdata){
-  if  (event == EVENT_MBUTTONDOWN){
+  if  (event == EVENT_LBUTTONDOWN && flags == ( EVENT_FLAG_SHIFTKEY + EVENT_FLAG_LBUTTON)){
     cout << "Setting Edge color at clicked - position (" << x << ", " << y << ")" << endl;
     edgeColorLoc = Point2i(x,y);
   }
@@ -283,6 +349,8 @@ vector<Vec2f> TableStitch::findCorrectLines(Mat image, vector<Vec2f> houghLines,
   }
   sort(foundLinesV.begin(), foundLinesV.end(), sortByHitMiss);
   sort(foundLinesH.begin(), foundLinesH.end(), sortByHitMiss);
+  filterLines(foundLinesH,4,20);
+  filterLines(foundLinesV,4,20);
   if(foundLinesH.size() >= 2){
     correctLines.push_back(foundLinesH[0].houghLine);
     correctLines.push_back(foundLinesH[1].houghLine);
@@ -300,14 +368,15 @@ vector<Vec2f> TableStitch::findCorrectLines(Mat image, vector<Vec2f> houghLines,
 /*
  * Main Program
  */
-void TableStitch::compute(Mat image){
+vector<Point2i> TableStitch::compute(Mat image){
+  matchingEdges.clear();
   //Create a window for User interaction
   namedWindow("My Window", CV_WINDOW_AUTOSIZE);
   //set the callback function for any mouse event
   setMouseCallback("My Window", CallBackFunc, NULL);
   cout << "Press left mouse button when selecting center table color: " << endl;
   cout << "Press right mouse button when selecting bumper color: " << endl;
-  cout << "Press middle mouse button when selecting the table edge color: " << endl;
+  cout << "Press left mouse button and Shift key when selecting the table edge color: " << endl;
   //show the image
   while(true){
     imshow("My Window", image);
@@ -370,7 +439,7 @@ void TableStitch::compute(Mat image){
   cv::findNonZero(detectedEdges, locations);
   std::cout << locations.size() << std::endl;
   std::cout << lines.size() << std::endl;
-  organizeLinesAndEdges(locations, correctLines, 4);
+  organizeLinesAndEdges(locations, correctLines, 3);
 
   // Draw the lines that line up
   cvtColor(cdst, cdst, CV_GRAY2BGR);
@@ -399,19 +468,6 @@ void TableStitch::compute(Mat image){
    line( cdst, pt1, pt2, Scalar(255,0,255), 1, CV_AA);
  }
 
- //   for( size_t i = 0; i < lines.size(); i++ ){
- //   float rho = lines[i][0], theta = lines[i][1];
- //   Point pt1, pt2;
- //   double a = cos(theta), b = sin(theta);
- //   double x0 = a*rho, y0 = b*rho;
-
-
- //   pt1.x = cvRound(x0 + 10000*(-b));
- //   pt1.y = cvRound(y0 + 10000*(a));
- //   pt2.x = cvRound(x0 - 10000*(-b));
- //   pt2.y = cvRound(y0 - 10000*(a));
- //   line( cdst, pt1, pt2, Scalar(255,0,0), 1, CV_AA);
- // }
  // Use Probabalistic Hough Lines
   #else
   // Dilate the imaage if possible.
@@ -428,20 +484,60 @@ void TableStitch::compute(Mat image){
   }
 #endif
 
-	// Detect Pockets
- vector<Point2i> pockets = getPockets(image, 40.0);
- cout << pockets.size() << endl;
- for(auto& pocket : pockets){
-  circle(cdst, pocket, 10, Scalar(0,0,255));  
+  // Detect Pockets
+  vector<Point2i> pockets = getPockets(image, 30.0);
+  //sort(pockets.begin(), pockets.end(), sortByX);
+  cout << pockets.size() << endl;
+  for(auto& pocket : pockets){
+    circle(cdst, pocket, 10, Scalar(0,0,255));  
+  }
+  // if(pockets.size() == 4){
+  //   cdst = warpImage(image, pockets);
+  // }
+  std::vector<int> compression_params;
+  compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+  compression_params.push_back(9);
+  imwrite("Output.png", cdst,compression_params );
+  namedWindow("Output", CV_WINDOW_NORMAL);
+  stitchedTable = cdst;
+
+  return pockets;
+} 
+
+Mat TableStitch::warpImage(Mat image, vector<Point2i> pockets){
+  sort(pockets.begin(), pockets.end(), sortByX);
+  Mat outputImage;
+  vector<Point2f> squareOrtho;
+  vector<Point2f> pocketf;
+
+  pocketf.push_back(pockets[2]);
+  pocketf.push_back(pockets[3]);
+  pocketf.push_back(pockets[1]);
+  pocketf.push_back(pockets[0]);
+
+  squareOrtho.push_back(Point2f(0, 0));
+  squareOrtho.push_back(Point2f(0, 1000));
+  squareOrtho.push_back(Point2f(1000, 0));
+  squareOrtho.push_back(Point2f(1000, 1000));
+  
+  Mat M = getPerspectiveTransform(pocketf, squareOrtho);
+
+  const int cellSize = 100;
+  Size imageSquareSize(10 * cellSize, 10 * cellSize);
+  warpPerspective(image, outputImage, M, imageSquareSize);
+
+
+  return outputImage;
+
 }
 
-std::vector<int> compression_params;
-compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-compression_params.push_back(9);
-imwrite("Output.png", cdst,compression_params );
-namedWindow("Output", CV_WINDOW_NORMAL);
-stitchedTable = cdst;
-    //imshow("Output" ,cdst);
-    //1waitKey(0);
-}
 
+Mat TableStitch::combineImages(Mat left, Mat right){
+  Mat output(left.rows, left.cols+right.cols, CV_8UC3);
+  Mat left_roi(output, Rect(0, 0, left.cols, left.rows));
+  left.copyTo(left_roi);
+  Mat right_roi(output, Rect(left.cols, 0, right.cols, right.rows));
+  right.copyTo(right_roi);
+
+  return output;
+}

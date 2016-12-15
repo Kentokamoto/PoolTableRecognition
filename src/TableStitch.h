@@ -20,11 +20,14 @@ class TableStitch{
 		Mat getStitchedTable();
 		void setStitchedTable(Mat input);
 		//void findBalls(Mat src);
-		void compute(Mat image);
+		std::vector<Point2i> compute(Mat image);
 		void organizeLinesAndEdges(std::vector<Point2i> edges, std::vector<Vec2f> lines, float accTol);
 		std::vector<Vec2f> getEdgeCoords(Mat& input);
 		std::vector<Vec2f> findCorrectLines(Mat image, std::vector<Vec2f> houghLines,float rhoOffset, float colorTol);
 		std::vector<Point2i> getPockets(Mat image, float gapTol);
+		Mat warpImage(Mat image, std::vector<Point2i> pockets);
+		Point2i get4thPoint(std::vector<Point2i> pockets, std::pair<float, float> line1, std::pair<float,float> line2);
+		Mat combineImages(Mat left, Mat right);
 };
 
 
