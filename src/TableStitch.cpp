@@ -422,6 +422,7 @@ vector<Point2i> TableStitch::compute(Mat image){
   // Get Edge Detection using the Otsu Edge Detections
   Canny(detectedEdges, detectedEdges, lowThreshold, highThreshold, kernelSize);
 
+
   // Dilate the image (Make the nonzero values appear wider on screen)
   int dilationValue = 1;
   Mat element = getStructuringElement( MORPH_ELLIPSE,
@@ -435,13 +436,16 @@ vector<Point2i> TableStitch::compute(Mat image){
   #if 1
   std::vector<Vec2f> lines;
   HoughLines(detectedEdges, lines,1,CV_PI/180, 300,0,0);
-  sort(lines.begin(), lines.end(), sortByTheta);
+  cvtColor(cdst, cdst, CV_GRAY2BGR);
+
+
+ sort(lines.begin(), lines.end(), sortByTheta);
   // Run some tests to see which lines are true to the rail and the cushion of the image.
-  vector<Vec2f> correctLines = findCorrectLines(image,lines,5.0, 30.0);
+ vector<Vec2f> correctLines = findCorrectLines(image,lines,5.0, 30.0);
   // Filter extra noise from the lines so hough lines that appear to be very similar with 
   // slightly different thetas or rhos are ignored. 
-  
-  sort(correctLines.begin(), correctLines.end(), sortByRho);
+
+ sort(correctLines.begin(), correctLines.end(), sortByRho);
   //filterLines(correctLines, 4, 20);
   //sort(correctLines.begin(), correctLines.end(), sortByTheta);
   //filterLines(correctLines, 4, 20);
@@ -454,7 +458,7 @@ vector<Point2i> TableStitch::compute(Mat image){
   organizeLinesAndEdges(locations, correctLines, 3);
 
   // Draw the lines that line up
-  cvtColor(cdst, cdst, CV_GRAY2BGR);
+  
   for(auto& point: matchingEdges){
     sort(point.second.begin(), point.second.end(), sortByXNeg);
     cout << point.second.size() << endl;
@@ -497,23 +501,23 @@ vector<Point2i> TableStitch::compute(Mat image){
 #endif
 
   // Detect Pockets
-  vector<Point2i> pockets = getPockets(image, 30.0);
+ vector<Point2i> pockets = getPockets(image, 30.0);
   //sort(pockets.begin(), pockets.end(), sortByX);
-  cout << pockets.size() << endl;
-  for(auto& pocket : pockets){
-    circle(cdst, pocket, 10, Scalar(0,0,255));  
-  }
+ cout << pockets.size() << endl;
+ for(auto& pocket : pockets){
+  circle(cdst, pocket, 10, Scalar(0,0,255));  
+}
   // if(pockets.size() == 4){
   //   cdst = warpImage(image, pockets);
   // }
-  std::vector<int> compression_params;
-  compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-  compression_params.push_back(9);
-  imwrite("Output.png", cdst,compression_params );
+std::vector<int> compression_params;
+compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+compression_params.push_back(9);
+imwrite("Output.png", cdst,compression_params );
   //namedWindow("Output", CV_WINDOW_NORMAL);
-  stitchedTable = cdst;
+stitchedTable = cdst;
 
-  return pockets;
+return pockets;
 } 
 
 Mat TableStitch::warpImage(Mat image, vector<Point2i> pockets){
