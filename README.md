@@ -22,7 +22,7 @@ For example, The program will take the two following images:
 
 The program will recognize the pockets of the image as follows:
 ![LeftCorner](https://github.com/Kentokamoto/PoolTableRecognition/blob/master/src/Photos/TableHalf/8/Result/LeftCorners.png)
-![RightCorner](https://github.com/Kentokamoto/PoolTableRecognition/blob/master/src/Photos/TableHalf/8/Result/RightCorners.png)
+![RightCorner](https://github.com/Kentokamoto/PoolTableRecognition/blob/master/src/Photos/TableHalf/8/Result/RightCorner.png)
 
 
 If four corners were detected in both the images, the following stitched images will be returned:
