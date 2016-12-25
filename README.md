@@ -17,15 +17,15 @@ The program should be run as follows:
 
 For example, The program will take the two following images:
 
-[LeftImage](https://github.com/Kentokamoto/PoolTableRecognition/blob/master/src/Photos/TableHalf/8/IMG_1.jpg)
+![LeftImage](https://github.com/Kentokamoto/PoolTableRecognition/blob/master/src/Photos/TableHalf/8/IMG_1.jpg)
 ![RightImage](https://github.com/Kentokamoto/PoolTableRecognition/blob/master/src/Photos/TableHalf/8/IMG_2.jpg)
 
 The program will recognize the pockets of the image as follows:
-[LeftCorner](https://github.com/Kentokamoto/PoolTableRecognition/blob/master/src/Photos/TableHalf/8/Result/LeftCorners.png)
+![LeftCorner](https://github.com/Kentokamoto/PoolTableRecognition/blob/master/src/Photos/TableHalf/8/Result/LeftCorners.png)
 ![RightCorner](https://github.com/Kentokamoto/PoolTableRecognition/blob/master/src/Photos/TableHalf/8/Result/RightCorners.png)
 
 
 If four corners were detected in both the images, the following stitched images will be returned:
-[Stitch](https://github.com/Kentokamoto/PoolTableRecognition/blob/master/src/Photos/TableHalf/8/Result/Stitched.png)
+![Stitch](https://github.com/Kentokamoto/PoolTableRecognition/blob/master/src/Photos/TableHalf/8/Result/Stitched.png)
 
 
